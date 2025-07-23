@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import onboard1 from '../assets/onboard1.png';
+import RoundedButton from '../components/RoundedButton';
 
 const Onboarding = () => {
+  const navigate = useNavigate();
   return (
     <div className="fixed inset-0 w-full h-full min-h-screen bg-white flex flex-col items-center justify-between overflow-hidden">
       {/* Header */}
@@ -30,8 +33,17 @@ const Onboarding = () => {
       </div>
       {/* Buttons */}
       <div className="w-full flex flex-col md:flex-row items-center justify-center gap-4 px-4 pb-8">
-        <button className="w-full md:w-1/3 max-w-xs h-14 rounded-full text-lg font-tilt-warp font-normal bg-[#0662CD] text-white shadow-md transition hover:bg-[#0033A0]">Get Started</button>
-        <button className="w-full md:w-1/3 max-w-xs h-14 rounded-full text-lg font-tilt-warp font-normal bg-[#E2F0FF] text-[#1F6FCB] shadow-md">I Already Have An Account</button>
+        <RoundedButton
+          className="md:w-1/3 max-w-xs bg-[#0662CD] text-white hover:bg-[#0033A0]"
+          onClick={() => navigate('/detective-intro')}
+        >
+          Get Started
+        </RoundedButton>
+        <RoundedButton
+          className="md:w-1/3 max-w-xs bg-[#E2F0FF] text-[#1F6FCB]"
+        >
+          I Already Have An Account
+        </RoundedButton>
       </div>
     </div>
   );
