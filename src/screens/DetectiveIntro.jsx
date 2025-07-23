@@ -11,7 +11,7 @@ const DetectiveIntro = () => {
     <div className="fixed inset-0 w-full h-full min-h-screen bg-white flex flex-col items-center justify-center overflow-hidden">
       {/* Back Arrow */}
       <BackButton
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/')} 
         className="absolute top-6 left-6"
         ariaLabel="Back to Onboarding"
       />
@@ -23,19 +23,18 @@ const DetectiveIntro = () => {
         <p className="text-[#0033A0] text-lg md:text-xl font-whitney text-center mb-6">
           I help people like you stay safe from online scams and suspicious messages. Ready to become a scam-detection expert?
         </p>
-        <div className="flex flex-col md:flex-row gap-4 w-full justify-center">
-          <div className="flex flex-col md:flex-row gap-4 w-full justify-center items-center">
-            <RoundedButton
-              className="md:w-1/2 max-w-xs bg-[#0662CD] text-white hover:bg-[#0033A0]"
-            >
-              Yes, Let's Go!
-            </RoundedButton>
-            <RoundedButton
-              className="md:w-1/2 max-w-xs bg-[#E2F0FF] text-[#1F6FCB]"
-            >
-              Tell Me More
-            </RoundedButton>
-          </div>
+        <div className="flex flex-col md:flex-row gap-4 w-full justify-center items-center">
+          <RoundedButton
+            className="md:w-1/2 max-w-xs bg-[#0662CD] text-white hover:bg-[#0033A0]"
+            onClick={() => navigate('/onboarding-question-1')}
+          >
+            Yes, Let's Go!
+          </RoundedButton>
+          <RoundedButton
+            className="md:w-1/2 max-w-xs bg-[#E2F0FF] text-[#1F6FCB]"
+          >
+            Tell Me More
+          </RoundedButton>
         </div>
       </div>
     </div>
