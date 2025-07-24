@@ -26,7 +26,7 @@ const DetectiveIntro = () => {
         <div className="flex flex-col md:flex-row gap-4 w-full justify-center items-center">
           <RoundedButton
             className="md:w-1/2 max-w-xs bg-[#0662CD] text-white hover:bg-[#0033A0]"
-            onClick={() => navigate('/onboarding-question-1')}
+            onClick={() => navigate('/onboarding-questions')}
           >
             Yes, Let's Go!
           </RoundedButton>

@@ -1,19 +1,31 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import './index.css';
-import App from './App.jsx';
-import DetectiveIntro from './screens/DetectiveIntro';
-import OnboardingQuestion1 from './screens/OnboardingQuestion1';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import App from './App';
+import Onboarding from './screens/Onboarding';
+import DetectiveIntro from './screens/DetectiveIntro';
+import OnboardingFlow from './screens/OnboardingFlow';
+import OnboardingComplete from './screens/OnboardingComplete';
+import Register from './screens/Register';
+import OnboardingQuestions from './screens/OnboardingQuestions';
+import Home from './screens/Home';
+import Login from './screens/Login';
+import './index.css';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<App />} />
+        <Route path="/" element={<Onboarding />} />
         <Route path="/detective-intro" element={<DetectiveIntro />} />
-        <Route path="/onboarding-question-1" element={<OnboardingQuestion1 />} />
+        <Route path="/onboarding" element={<OnboardingFlow />} />
+        <Route path="/onboarding-questions" element={<OnboardingQuestions />} />
+        <Route path="/onboarding-complete" element={<OnboardingComplete />} />
+        <Route path="/signup" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/home" element={<Home />} />
+        {/* Add other routes as needed */}
       </Routes>
     </BrowserRouter>
-  </StrictMode>,
+  </React.StrictMode>
 );
