@@ -4,6 +4,7 @@ import { auth, firestore } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import Header from '../components/Header';
 import RoundedButton from '../components/RoundedButton';
+import BottomNav from '../components/BottomNav';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -281,24 +282,9 @@ const Profile = () => {
       </main>
 
       {/* Bottom Nav */}
-      <nav className="bg-[#0033A0] text-white text-xs fixed bottom-0 left-0 right-0 flex justify-around py-2 shadow-md z-50">
-        <NavItem icon="🏠" label="Home" onClick={() => navigate('/')} />
-        <NavItem icon="🎮" label="Play" onClick={() => navigate('/play')} />
-        <NavItem icon="💬" label="Chat" onClick={() => navigate('/chat')} />
-        <NavItem icon="👤" label="Profile" onClick={() => navigate('/profile')} active={true} />
-      </nav>
+      <BottomNav activePage="/profile" />
     </div>
   );
 };
-
-const NavItem = ({ icon, label, onClick, active = false }) => (
-  <button
-    onClick={onClick}
-    className={`flex flex-col items-center transition-all ${active ? 'text-white' : 'hover:text-[#00AEFF]'}`}
-  >
-    <span className="text-xl">{icon}</span>
-    <span>{label}</span>
-  </button>
-);
 
 export default Profile;

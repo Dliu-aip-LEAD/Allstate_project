@@ -2,8 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import alliAvatar from '../assets/onboard1.png'; // Replace with correct path
 import Header from '../components/Header';
-
-
+import BottomNav from '../components/BottomNav';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -113,24 +112,9 @@ const Home = () => {
       </main>
 
       {/* Bottom Nav */}
-      <nav className="bg-[#0033A0] text-white text-xs fixed bottom-0 left-0 right-0 flex justify-around py-2 shadow-md z-50">
-        <NavItem icon="🏠" label="Home" onClick={() => navigate('/')} />
-        <NavItem icon="🎮" label="Play" onClick={() => navigate('/play')} />
-        <NavItem icon="💬" label="Chat" onClick={() => navigate('/chat')} />
-        <NavItem icon="👤" label="Profile" onClick={() => navigate('/profile')} />
-      </nav>
+      <BottomNav />
     </div>
   );
 };
-
-const NavItem = ({ icon, label, onClick }) => (
-  <button
-    onClick={onClick}
-    className="flex flex-col items-center hover:text-[#00AEFF] transition-all"
-  >
-    <span className="text-xl">{icon}</span>
-    <span>{label}</span>
-  </button>
-);
 
 export default Home;
