@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import onboard1 from '../assets/onboard1.png';
 import RoundedButton from '../components/RoundedButton';
+import alliAvatar from '../assets/onboard1.png';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const Onboarding = () => {
         </RoundedButton>
         <RoundedButton
           className="md:w-1/3 max-w-xs bg-[#E2F0FF] text-[#1F6FCB]"
+          onClick={() => navigate('/login')}
         >
           I Already Have An Account
         </RoundedButton>
