@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import alliAvatar from '../assets/onboard1.png'; // Replace with correct path
 import Header from '../components/Header';
 
+
+
 const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
