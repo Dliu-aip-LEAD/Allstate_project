@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './screens/Home';
 import Profile from './screens/Profile';
 import Play from './screens/Play';
+import Chat from './screens/Chat';
 
 import './App.css';
 
@@ -15,6 +16,7 @@ function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/play" element={<Play />} />
+        <Route path="/chat" element={<Chat />} />
       </Routes>
     </Router>
   );
