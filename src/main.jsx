@@ -11,6 +11,8 @@ import OnboardingQuestions from './screens/OnboardingQuestions';
 import Home from './screens/Home';
 import Login from './screens/Login';
 import './index.css';
+import './App.css';
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
