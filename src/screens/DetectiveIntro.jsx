@@ -8,14 +8,14 @@ const DetectiveIntro = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="fixed inset-0 w-full h-full min-h-screen bg-white flex flex-col items-center justify-center overflow-hidden">
+    <div className="min-h-screen w-full bg-white flex flex-col items-center overflow-y-auto relative">
       {/* Back Arrow */}
       <BackButton
         onClick={() => navigate('/')} 
-        className="absolute top-6 left-6"
+        className="absolute top-6 left-6 z-10"
         ariaLabel="Back to Onboarding"
       />
-      <div className="flex flex-col items-center w-full max-w-xl px-4">
+      <div className="flex flex-col items-center w-full max-w-xl px-4 py-8">
         <img src={onboard1} alt="Detective Alli" className="w-60 h-60 md:w-80 md:h-80 object-contain mb-6" />
         <h1 className="text-[#0033A0] text-2xl md:text-3xl font-whitney font-bold text-center mb-4">
           Hello there, Detective! I'm Alli, your personal scam-fighting partner! 🕵️‍♂️

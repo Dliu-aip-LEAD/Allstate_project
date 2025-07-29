@@ -5,6 +5,7 @@ import BackButton from '../components/BackButton';
 import { auth, firestore } from '../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import Header from '../components/Header';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -44,37 +45,36 @@ const Register = () => {
     }
   };
 
+  const handleButtonClick = (action) => {
+    if (action === 'login') {
+      navigate('/login');
+    }
+  };
+
   return (
-    <div className="fixed inset-0 w-full h-full min-h-screen bg-white flex flex-col items-center overflow-hidden">
+    <div className="min-h-screen w-full bg-white flex flex-col items-center overflow-y-auto relative">
       {/* Header */}
-      <div className="w-full flex flex-col items-center bg-[#0033A0] py-6 px-4 md:py-8 md:px-12 relative">
-        <div className="w-full flex items-center justify-between max-w-5xl mx-auto">
-          <div className="flex items-center">
-            <span className="text-white text-2xl font-bold mr-2">Allstate</span>
-            <span className="text-white text-xs font-whitney tracking-widest">IDENTITY PROTECTION</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              className="bg-[#E2F0FF] text-[#0662CD] font-bold text-lg rounded-full px-6 py-2 shadow-sm hover:bg-[#d0e7ff] focus:outline-none focus:ring-2 focus:ring-blue-400"
-              onClick={() => navigate('/login')}
-            >
-              Login
-            </button>
-            <div className="w-12 h-12 bg-white/80 rounded-full flex items-center justify-center text-blue-900 font-bold text-lg">
-              {/* Shield icon placeholder */}
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M16 3L28 7V15C28 22.18 22.84 28.27 16 29C9.16 28.27 4 22.18 4 15V7L16 3Z" fill="#fff"/><path d="M16 3L28 7V15C28 22.18 22.84 28.27 16 29C9.16 28.27 4 22.18 4 15V7L16 3Z" stroke="#0033A0" strokeWidth="2"/><circle cx="16" cy="16" r="5" fill="#0033A0"/><path d="M16 13V16L18 18" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header 
+        variant="onboarding" 
+        showButtons={true}
+        buttons={[
+          {
+            label: 'Login',
+            action: 'login',
+            className: 'bg-[#E2F0FF] text-[#0662CD] font-bold text-lg rounded-full px-6 py-2 shadow-sm hover:bg-[#d0e7ff] focus:outline-none focus:ring-2 focus:ring-blue-400'
+          }
+        ]}
+        onButtonClick={handleButtonClick}
+      />
+
       {/* Back Arrow */}
       <BackButton
         onClick={() => navigate(-1)}
-        className="absolute top-6 left-6"
+        className="absolute top-6 left-6 z-10"
         ariaLabel="Back"
       />
-      {/* Main Content */}
-      <div className="flex flex-col items-center w-full px-4 mt-8 relative">
+      {/* Main Content with top padding for fixed header */}
+      <div className="flex flex-col items-center w-full px-4 py-8 pt-32 relative">
         <form
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full flex flex-col items-center border border-gray-200"
@@ -112,23 +112,18 @@ const Register = () => {
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#0662CD] focus:outline-none"
-              onClick={() => setShowPassword((v) => !v)}
-              tabIndex={-1}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
             >
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path d="M1 12C2.73 7.61 7.11 4.5 12 4.5C16.89 4.5 21.27 7.61 23 12C21.27 16.39 16.89 19.5 12 19.5C7.11 19.5 2.73 16.39 1 12Z" stroke="#0662CD" strokeWidth="2"/>
-                <circle cx="12" cy="12" r="3.5" stroke="#0662CD" strokeWidth="2"/>
-              </svg>
+              {showPassword ? '🙈' : '👁️'}
             </button>
           </div>
           <RoundedButton
             type="submit"
-            className="bg-[#0662CD] text-white font-bold text-lg hover:bg-[#0033A0] w-full h-14 mt-2"
+            className="w-full bg-[#0662CD] text-white hover:bg-[#0033A0] h-12"
             disabled={loading}
           >
-            {loading ? 'Creating Account...' : 'CREATE ACCOUNT'}
+            {loading ? 'Creating account...' : 'Create Account'}
           </RoundedButton>
         </form>
       </div>

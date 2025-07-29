@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import RoundedButton from '../components/RoundedButton';
 import BackButton from '../components/BackButton';
+import Header from '../components/Header';
 import styles from './OnboardingQuestions.module.css';
 import onboard1 from '../assets/alli_question.png';
 
@@ -12,28 +13,18 @@ const OnboardingComplete = () => {
   const answers = location.state?.answers;
 
   return (
-    <div className="fixed inset-0 w-full h-full min-h-screen bg-white flex flex-col items-center overflow-hidden">
+    <div className="min-h-screen w-full bg-white flex flex-col items-center overflow-y-auto relative">
       {/* Header */}
-      <div className="w-full flex flex-col items-center bg-[#0033A0] py-6 px-4 md:py-8 md:px-12 relative">
-        <div className="w-full flex items-center justify-between max-w-5xl mx-auto">
-          <div className="flex items-center">
-            <span className="text-white text-2xl font-bold mr-2">Allstate</span>
-            <span className="text-white text-xs font-whitney tracking-widest">IDENTITY PROTECTION</span>
-          </div>
-          <div className="w-12 h-12 bg-white/80 rounded-full flex items-center justify-center text-blue-900 font-bold text-lg">
-            {/* Shield icon placeholder */}
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M16 3L28 7V15C28 22.18 22.84 28.27 16 29C9.16 28.27 4 22.18 4 15V7L16 3Z" fill="#fff"/><path d="M16 3L28 7V15C28 22.18 22.84 28.27 16 29C9.16 28.27 4 22.18 4 15V7L16 3Z" stroke="#0033A0" strokeWidth="2"/><circle cx="16" cy="16" r="5" fill="#0033A0"/><path d="M16 13V16L18 18" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
-          </div>
-        </div>
-      </div>
+      <Header variant="onboarding" />
+
       {/* Back Arrow */}
       <BackButton
         onClick={() => navigate(-1)}
-        className="absolute top-6 left-6"
+        className="absolute top-6 left-6 z-10"
         ariaLabel="Back"
       />
-      {/* Main Content */}
-      <div className="flex flex-col items-center w-full max-w-xl px-4 mt-8 relative">
+      {/* Main Content with top padding for fixed header */}
+      <div className="flex flex-col items-center w-full max-w-xl px-4 py-8 pt-32 relative">
         <div className={styles.bubbleRow}>
           <img
             src={onboard1}

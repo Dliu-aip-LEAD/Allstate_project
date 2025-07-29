@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import alliAvatar from '../assets/onboard1.png'; // Replace with correct path
+import Header from '../components/Header';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -9,20 +10,11 @@ const Home = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white w-full">
-      {/* Full-width Blue Header */}
-      <header className="w-full bg-[#0033A0] flex justify-between items-center px-4 py-3 fixed top-0 left-0 right-0 z-50">
-  <div className="text-white">
-    <p className="text-base font-bold">Allstate®</p>
-    <p className="text-xs font-medium">IDENTITY PROTECTION</p>
-  </div>
-  <div className="w-8 h-8 rounded-full bg-[#E6F0FF] flex items-center justify-center text-sm font-semibold text-[#0033A0]">
-    🛡️
-  </div>
-</header>
-
+      {/* Header */}
+      <Header variant="home" />
 
       {/* Main Content */}
-      <main className="flex-1 px-4 py-6 space-y-6">
+      <main className="flex-1 px-4 py-6 space-y-6 pt-20">
         {/* Detective Alli Section */}
         <section className="bg-[#E6F0FF] p-4 rounded-2xl shadow-sm">
           <div className="flex gap-3 items-center">
@@ -39,7 +31,7 @@ const Home = () => {
       key={i}
       className="bg-white p-2 rounded-md shadow-sm hover:bg-[#f0f4f8] cursor-pointer transition"
     >
-      “{q}”
+      "{q}"
     </p>
   ))}
 </div>

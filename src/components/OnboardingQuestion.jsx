@@ -4,6 +4,7 @@ import BackButton from './BackButton';
 import RoundedButton from './RoundedButton';
 import TextBubble from './TextBubble';
 import TypewriterText from './TypewriterText';
+import Header from './Header';
 import styles from '../screens/OnboardingQuestions.module.css';
 
 const OnboardingQuestion = ({ 
@@ -29,31 +30,21 @@ const OnboardingQuestion = ({
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full min-h-screen bg-white flex flex-col items-center overflow-hidden">
+    <div className="min-h-screen w-full bg-white flex flex-col items-center overflow-y-auto relative">
       {/* Header */}
-      <div className="w-full flex flex-col items-center bg-[#0033A0] py-6 px-4 md:py-8 md:px-12 relative">
-        <div className="w-full flex items-center justify-between max-w-5xl mx-auto">
-          <div className="flex items-center">
-            <span className="text-white text-2xl font-bold mr-2">Allstate</span>
-            <span className="text-white text-xs font-whitney tracking-widest">IDENTITY PROTECTION</span>
-          </div>
-          <div className="w-12 h-12 bg-white/80 rounded-full flex items-center justify-center text-blue-900 font-bold text-lg">
-            {/* Shield icon placeholder */}
-          </div>
-        </div>
-      </div>
+      <Header variant="onboarding" />
       
       {/* Back Arrow */}
       {showBackButton && (
         <BackButton
           onClick={handleBackClick}
-          className="absolute top-6 left-6"
+          className="absolute top-6 left-6 z-10"
           ariaLabel="Back"
         />
       )}
       
-      {/* Main Content */}
-      <div className="flex flex-col items-center w-full max-w-xl px-4 mt-8 relative">
+      {/* Main Content with top padding for fixed header */}
+      <div className="flex flex-col items-center w-full max-w-xl px-4 py-8 pt-32 relative">
         <div className={styles.bubbleRow}>
           <img
             src={questionData.image}
@@ -69,7 +60,7 @@ const OnboardingQuestion = ({
         </div>
         
         {/* Options */}
-        <div className="flex flex-col gap-4 w-full max-w-xs mt-2">
+        <div className="flex flex-col gap-4 w-full max-w-xs mt-8">
           {questionData.options.map((option, index) => (
             <RoundedButton
               key={index}
