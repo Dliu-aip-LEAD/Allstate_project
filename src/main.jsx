@@ -10,6 +10,7 @@ import Register from './screens/Register';
 import OnboardingQuestions from './screens/OnboardingQuestions';
 import Home from './screens/Home';
 import Login from './screens/Login';
+import Profile from './screens/Profile';
 import './index.css';
 import './App.css';
 
@@ -26,6 +27,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/signup" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/profile" element={<Profile />} />
         {/* Add other routes as needed */}
       </Routes>
     </BrowserRouter>
