@@ -12,6 +12,7 @@ import Home from './screens/Home';
 import Login from './screens/Login';
 import Profile from './screens/Profile';
 import Play from './screens/Play';
+import Chat from './screens/Chat';
 import './index.css';
 import './App.css';
 
@@ -30,6 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/home" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/play" element={<Play />} />
+        <Route path="/chat" element={<Chat />} />
         {/* Add other routes as needed */}
       </Routes>
     </BrowserRouter>
