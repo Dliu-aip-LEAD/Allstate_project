@@ -4,11 +4,11 @@
 
 from firebase_functions import https_fn
 from firebase_functions.options import set_global_options
-from firebase_admin import initialize_app
+from firebase_admin import initialize_app, credentials, storage
 import json
 from datetime import datetime
 import base64
-from google.cloud import storage
+from google.cloud import storage as gcs_storage
 import tempfile
 import os
 
@@ -19,11 +19,49 @@ import os
 # parameter in the decorator, e.g. @https_fn.on_request(max_instances=5).
 set_global_options(max_instances=10)
 
-# Initialize Firebase app
-initialize_app()
+# Initialize Firebase app with storage bucket configuration
+# In Cloud Functions, Firebase Admin SDK is automatically initialized
+# but we can configure the storage bucket
+initialize_app(options={
+    'storageBucket': 'allstate-8f387.appspot.com'  # Replace with your actual Firebase project ID
+})
 
 # GCS bucket configuration
 BUCKET_NAME = "allstate-8f387.firebasestorage.app"
+
+def upload_image_to_firebase(image_path, destination_blob_name):
+    """
+    Uploads an image file to Firebase Storage.
+    
+    Args:
+        image_path (str): The local path to the image file.
+        destination_blob_name (str): The desired path/name for the image in Firebase Storage.
+    """
+    try:
+        # Get the default Firebase Storage bucket
+        bucket = storage.bucket()
+        blob = bucket.blob(destination_blob_name)
+
+        # Upload the image
+        blob.upload_from_filename(image_path)
+
+        print(f"Image '{image_path}' uploaded successfully to '{destination_blob_name}' in Firebase Storage.")
+        # Optionally, you can get the public URL of the uploaded image
+        # print(f"Public URL: {blob.public_url}")
+        
+        return {
+            'success': True,
+            'message': f'Image uploaded successfully to Firebase Storage',
+            'destination': destination_blob_name,
+            'publicUrl': blob.public_url if blob.public_url else None
+        }
+
+    except Exception as e:
+        print(f"Error uploading image: {e}")
+        return {
+            'success': False,
+            'error': str(e)
+        }
 
 @https_fn.on_request()
 def upload_image_notification(req: https_fn.Request) -> https_fn.Response:
@@ -131,7 +169,7 @@ def store_image_to_gcs(req: https_fn.Request) -> https_fn.Response:
         
         # Initialize GCS client inside the function to avoid deployment timeouts
         try:
-            storage_client = storage.Client()
+            storage_client = gcs_storage.Client()
             bucket = storage_client.bucket(BUCKET_NAME)
         except Exception as e:
             return https_fn.Response(
@@ -197,6 +235,102 @@ def store_image_to_gcs(req: https_fn.Request) -> https_fn.Response:
             status=200,
             headers=headers
         )
+        
+    except Exception as e:
+        return https_fn.Response(
+            json.dumps({"error": str(e)}),
+            status=500,
+            headers=headers
+        )
+
+@https_fn.on_request()
+def upload_file_to_firebase(req: https_fn.Request) -> https_fn.Response:
+    """Upload a file to Firebase Storage using the template pattern"""
+    try:
+        # Set CORS headers
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Content-Type": "application/json"
+        }
+        
+        # Handle preflight requests
+        if req.method == "OPTIONS":
+            return https_fn.Response("", status=200, headers=headers)
+        
+        if req.method != "POST":
+            return https_fn.Response(
+                json.dumps({"error": "Method not allowed"}),
+                status=405,
+                headers=headers
+            )
+        
+        # Parse request data
+        request_data = req.get_json()
+        image_data = request_data.get('imageData', '')  # Base64 encoded image
+        destination_blob_name = request_data.get('destinationBlobName', '')
+        user_id = request_data.get('userId', 'anonymous')
+        
+        if not destination_blob_name:
+            return https_fn.Response(
+                json.dumps({"error": "Destination blob name is required"}),
+                status=400,
+                headers=headers
+            )
+        
+        if not image_data:
+            return https_fn.Response(
+                json.dumps({"error": "Image data is required"}),
+                status=400,
+                headers=headers
+            )
+        
+        # Create temporary file from base64 data
+        try:
+            # Remove data URL prefix if present
+            if image_data.startswith('data:'):
+                image_data = image_data.split(',')[1]
+            
+            image_bytes = base64.b64decode(image_data)
+            
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+                temp_file.write(image_bytes)
+                temp_file_path = temp_file.name
+            
+            # Upload using the template function
+            result = upload_image_to_firebase(temp_file_path, destination_blob_name)
+            
+            # Clean up temporary file
+            os.unlink(temp_file_path)
+            
+            if result['success']:
+                # Add additional metadata
+                result.update({
+                    'userId': user_id,
+                    'timestamp': datetime.utcnow().isoformat() + 'Z',
+                    'fileSize': len(image_bytes)
+                })
+                
+                return https_fn.Response(
+                    json.dumps(result),
+                    status=200,
+                    headers=headers
+                )
+            else:
+                return https_fn.Response(
+                    json.dumps({"error": result['error']}),
+                    status=500,
+                    headers=headers
+                )
+                
+        except Exception as e:
+            return https_fn.Response(
+                json.dumps({"error": f"Failed to process image: {str(e)}"}),
+                status=500,
+                headers=headers
+            )
         
     except Exception as e:
         return https_fn.Response(
