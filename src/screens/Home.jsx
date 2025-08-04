@@ -53,7 +53,7 @@ const Home = () => {
             {["Screenshot", "Upload File", "Take Photo"].map((label) => (
               <button
                 key={label}
-                onClick={() => alert(`${label} clicked`)}
+                onClick={() => navigate('/quick-scam-scan', { state: { userInfo: { uid: 'user123', displayName: name } } })}
                 className="flex flex-col items-center justify-center border p-3 rounded-lg hover:bg-gray-100 shadow-sm"
               >
                 <span className="text-xl">📎</span>

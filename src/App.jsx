@@ -5,6 +5,7 @@ import Home from './screens/Home';
 import Profile from './screens/Profile';
 import Play from './screens/Play';
 import Chat from './screens/Chat';
+import QuickScamScan from './screens/QuickScamScan';
 
 import './App.css';
 
@@ -17,6 +18,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/play" element={<Play />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/quick-scam-scan" element={<QuickScamScan />} />
       </Routes>
     </Router>
   );
