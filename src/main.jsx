@@ -22,7 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Onboarding />} />
+        <Route path="/" element={<Home />} />
         <Route path="/detective-intro" element={<DetectiveIntro />} />
         <Route path="/onboarding" element={<OnboardingFlow />} />
         <Route path="/onboarding-questions" element={<OnboardingQuestions />} />

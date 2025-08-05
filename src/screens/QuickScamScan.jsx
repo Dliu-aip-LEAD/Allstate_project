@@ -3,11 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import BackButton from '../components/BackButton';
+import { uploadImageToStorage, uploadImageAsBase64 } from '../utils/storage';
 
 const QuickScamScan = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -15,6 +18,9 @@ const QuickScamScan = () => {
   const [error, setError] = useState(null);
   const [scanHistory, setScanHistory] = useState([]);
   const [manualText, setManualText] = useState('');
+  const [showCamera, setShowCamera] = useState(false);
+  const [stream, setStream] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Get user info from location state or localStorage
   const userInfo = location.state?.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
@@ -24,6 +30,15 @@ const QuickScamScan = () => {
     // Load scan history on component mount
     loadScanHistory();
   }, []);
+
+  // Cleanup camera stream on component unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
 
   const loadScanHistory = async () => {
     try {
@@ -36,6 +51,105 @@ const QuickScamScan = () => {
       }
     } catch (error) {
       console.error('Error loading scan history:', error);
+    }
+  };
+
+  // Camera functionality
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment', // Use back camera if available
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        } 
+      });
+      setStream(mediaStream);
+      setShowCamera(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setError('Unable to access camera. Please check permissions.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw the video frame to canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+          setSelectedFile(file);
+          setPreviewUrl(URL.createObjectURL(blob));
+          stopCamera();
+        }
+      }, 'image/jpeg', 0.8);
+    }
+  };
+
+  const handleTakePhoto = () => {
+    startCamera();
+  };
+
+  const handleShareWithAlli = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    try {
+      let imageUrl;
+      
+      // Try Firebase Storage first with fallback to base64
+      try {
+        console.log('Uploading photo to Firebase Storage...');
+        imageUrl = await uploadImageToStorage(selectedFile, userId, 'chat-images');
+        console.log('Photo uploaded to Firebase Storage:', imageUrl);
+      } catch (storageError) {
+        console.warn('Firebase Storage failed, using fallback method:', storageError);
+        imageUrl = await uploadImageAsBase64(selectedFile, userId);
+        console.log('Photo stored as base64 (temporary)');
+      }
+
+      // Navigate to chat with the photo
+      navigate('/chat', { 
+        state: { 
+          name: userInfo.displayName || 'there',
+          context: 'image_share',
+          imageUrl: imageUrl,
+          imageFile: selectedFile
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      setError('Failed to upload photo. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleImageClick = () => {
+    if (selectedFile) {
+      handleShareWithAlli();
     }
   };
 
@@ -184,7 +298,7 @@ const QuickScamScan = () => {
               {/* Upload Options */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { icon: '📷', label: 'Take Photo', action: () => handleUploadClick() },
+                  { icon: '📷', label: 'Take Photo', action: () => handleTakePhoto() },
                   { icon: '📁', label: 'Upload File', action: () => handleUploadClick() },
                   { icon: '📝', label: 'Enter Text', action: () => setManualText(' ') }
                 ].map((option, index) => (
@@ -213,11 +327,12 @@ const QuickScamScan = () => {
               {/* Image Preview or Text Input */}
               {previewUrl ? (
                 <div className="relative">
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="w-full h-64 object-contain border rounded-lg"
-                  />
+                                     <img
+                     src={previewUrl}
+                     alt="Preview"
+                     className="w-full h-64 object-contain border rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                     onClick={handleImageClick}
+                   />
                   <button
                     onClick={() => {
                       setSelectedFile(null);
@@ -228,6 +343,23 @@ const QuickScamScan = () => {
                   >
                     ×
                   </button>
+                  <button
+                    onClick={handleShareWithAlli}
+                    disabled={isUploading}
+                    className="absolute top-2 left-2 bg-[#0033A0] text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-[#002266] transition-colors disabled:opacity-50"
+                  >
+                    {isUploading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    )}
+                  </button>
+                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs flex items-center">
+                    <span className="mr-1">💬</span>
+                    {isUploading ? 'Uploading...' : 'Click to share with Alli'}
+                  </div>
                 </div>
               ) : (
                 <div>
@@ -384,6 +516,53 @@ const QuickScamScan = () => {
           </div>
         )}
       </div>
+
+      {/* Camera Interface */}
+      {showCamera && (
+        <div className="fixed inset-0 bg-black z-50 flex flex-col">
+          {/* Camera Header */}
+          <div className="bg-black text-white p-4 flex items-center justify-between">
+            <button
+              onClick={stopCamera}
+              className="text-white hover:text-gray-300"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h3 className="text-lg font-semibold">Take Photo</h3>
+            <div className="w-6"></div> {/* Spacer for centering */}
+          </div>
+
+          {/* Camera View */}
+          <div className="flex-1 relative">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            
+            {/* Camera Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="border-2 border-white border-dashed rounded-lg w-80 h-60 opacity-50"></div>
+            </div>
+          </div>
+
+          {/* Camera Controls */}
+          <div className="bg-black p-6 flex items-center justify-center">
+            <button
+              onClick={capturePhoto}
+              className="bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors"
+            >
+              <div className="bg-white rounded-full w-12 h-12 border-4 border-gray-300"></div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden canvas for photo capture */}
+      <canvas ref={canvasRef} className="hidden" />
 
       {/* Bottom Nav */}
       <BottomNav activePage="/quick-scam-scan" />
