@@ -9,7 +9,7 @@ const BottomNav = ({ activePage = null }) => {
   const currentPage = activePage || location.pathname;
 
   const navItems = [
-    { path: '/', icon: '🏠', label: 'Home' },
+    { path: '/home', icon: '🏠', label: 'Home' },
     { path: '/play', icon: '🎮', label: 'Play' },
     { path: '/chat', icon: '💬', label: 'Chat' },
     { path: '/profile', icon: '👤', label: 'Profile' }
