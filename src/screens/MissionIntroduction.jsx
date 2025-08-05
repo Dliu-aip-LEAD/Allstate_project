@@ -16,7 +16,7 @@ const MissionIntroduction = () => {
       xpReward: 50,
       estimatedTime: '5-8 minutes',
       detective: {
-        name: 'Detective Alli',
+        name: 'ChiefDetective Alli',
         role: 'Lead Training Officer • Email Crimes Unit',
         avatar: '🕵️',
         message: [
