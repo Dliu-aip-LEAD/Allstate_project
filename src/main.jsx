@@ -13,6 +13,7 @@ import Login from './screens/Login';
 import Profile from './screens/Profile';
 import Play from './screens/Play';
 import Chat from './screens/Chat';
+import QuickScamScan from './screens/QuickScamScan';
 import './index.css';
 import './App.css';
 
@@ -21,7 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Onboarding />} />
+        <Route path="/" element={<Home />} />
         <Route path="/detective-intro" element={<DetectiveIntro />} />
         <Route path="/onboarding" element={<OnboardingFlow />} />
         <Route path="/onboarding-questions" element={<OnboardingQuestions />} />
@@ -32,6 +33,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/profile" element={<Profile />} />
         <Route path="/play" element={<Play />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/quick-scam-scan" element={<QuickScamScan />} />
         {/* Add other routes as needed */}
       </Routes>
     </BrowserRouter>
