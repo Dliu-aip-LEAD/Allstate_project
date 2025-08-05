@@ -52,8 +52,12 @@ const Play = () => {
   ];
 
   const handleDepartmentClick = (department) => {
+    console.log('Department clicked:', department);
     if (department.unlocked) {
+      console.log('Navigating to:', `/training/${department.id}`);
       navigate(`/training/${department.id}`);
+    } else {
+      console.log('Department is locked');
     }
   };
 

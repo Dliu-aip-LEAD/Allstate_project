@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "serve -s dist -l $PORT"
+    "start": "serve -s dist -l 3000"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
@@ -31,6 +31,6 @@
     "postcss": "^8.5.6",
     "serve": "^14.2.4",
     "tailwindcss": "^4.1.11",
-    "vite": "^7.0.4"
+    "vite": "^6.3.5"
   }
 }
