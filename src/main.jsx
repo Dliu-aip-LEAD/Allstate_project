@@ -17,6 +17,7 @@ import EmailCrimeUnit from './screens/EmailCrimeUnit';
 import MissionIntroduction from './screens/MissionIntroduction';
 import MissionInvestigation from './screens/MissionInvestigation';
 import MissionComplete from './screens/MissionComplete';
+import QuickScamScan from './screens/QuickScamScan';
 import './index.css';
 import './App.css';
 
@@ -25,7 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Onboarding />} />
+        <Route path="/" element={<Home />} />
         <Route path="/detective-intro" element={<DetectiveIntro />} />
         <Route path="/onboarding" element={<OnboardingFlow />} />
         <Route path="/onboarding-questions" element={<OnboardingQuestions />} />
@@ -40,6 +41,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/mission/:missionId/introduction" element={<MissionIntroduction />} />
         <Route path="/mission/:missionId/investigation" element={<MissionInvestigation />} />
         <Route path="/mission/:missionId/complete" element={<MissionComplete />} />
+        <Route path="/quick-scam-scan" element={<QuickScamScan />} />
         {/* Add other routes as needed */}
       </Routes>
     </BrowserRouter>
