@@ -1,16 +1,101 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams} from 'react-router-dom';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import alliAvatar from '../assets/onboard1.png';
 import { uploadImageToStorage, uploadImageAsBase64, testStorageConnection } from '../utils/storage';
 
+
+const openaiService = {
+  async sendMessage(messages, imageUrl = null) {
+    try {
+      
+      const systemMessage = {
+        role: "system",
+        content: `You are Alli, a helpful AI assistant specializing in cybersecurity and scam detection. 
+        You help users identify scams, analyze suspicious messages, emails, and images for potential threats.
+        Be friendly, helpful, and provide clear guidance on staying safe online. 
+        Keep responses conversational but informative. Use active voice, be direct and concise, and Simplify grammar`
+      };
+
+      const chatMessages = [systemMessage];
+      
+      
+      // This is how chatgpt api reads messages. 
+      messages.forEach(msg => {
+        if (msg.sender === 'user') {
+          if (msg.type === 'image' && imageUrl) {
+            chatMessages.push({
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: msg.text
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: imageUrl
+                  }
+                }
+              ]
+            });
+          } else {
+            chatMessages.push({
+              role: "user",
+              content: msg.text
+            });
+          }
+        } else if (msg.sender === 'alli' && msg.text && !msg.text.includes("I'm having trouble")) {
+        chatMessages.push({
+          role: "assistant",
+          content: msg.text
+          });
+        }
+      });
+
+      console.log("...", JSON.stringify(chatMessages, null, 2));
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${"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"}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: chatMessages,
+          max_tokens: 1000,
+          temperature: 0.7
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const reply = data.choices?.[0]?.message?.content?.trim();
+
+
+      return reply;
+    } catch (error) {
+      console.error('Error:', error);
+      throw error;
+    }
+  }
+};
+
 const Chat = () => {
   const location = useLocation();
+  
   const name = location.state?.name || 'there';
   const context = location.state?.context;
   const imageUrl = location.state?.imageUrl;
   const imageFile = location.state?.imageFile;
+  const [searchParams] = useSearchParams(); 
+  const [hasSent, setHasSent] = useState(false);
   
   const [messages, setMessages] = useState([
     {
@@ -19,20 +104,40 @@ const Chat = () => {
       text: `Hello ${name}, what can I do for you today?`,
       timestamp: new Date()
     },
-    {
-      id: 2,
-      sender: 'alli',
-      text: 'I can help you identify scams, answer questions about suspicious messages, or provide safety tips.',
-      timestamp: new Date()
-    }
+    
   ]);
+
+useEffect(() => {
+  const questionParam = searchParams.get("question")
+
+  if(questionParam && messages.length === 0) {
+    
+    
+    const newMessage = {
+      
+      sender: 'user',
+      text: questionParam,
+      timestamp: Date.now()
+    }
+  
+  setMessages((prev) => [...prev, newMessage]);
+  handleSendMessage(questionParam)
+  setHasSent(true);
+  }
+},[searchParams, hasSent])
+
+ 
+
+
   const [newMessage, setNewMessage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const processedImageRef = useRef(false);
   const processedAnalysisRef = useRef(false);
   const fileInputRef = useRef(null);
+  const timeoutIds = useRef([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -41,6 +146,13 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutIds.current.forEach(clearTimeout);
+    };
+  }, []);
 
   // Test Firebase Storage connection on component mount
   useEffect(() => {
@@ -61,17 +173,54 @@ const Chat = () => {
     }
   };
 
+  // Generate AI response
+  const generateAIResponse = async (userMessage, currentMessages) => {
+    setIsTyping(true);
+    try {
+      // Get the last image URL if the recent message contains an image
+      const recentImageMessage = currentMessages
+        .slice(-5) // Check last 5 messages
+        .reverse()
+        .find(msg => msg.type === 'image');
+      
+      const imageUrlForAPI = recentImageMessage?.imageUrl;
+      
+      const aiResponse = await openaiService.sendMessage(currentMessages, imageUrlForAPI);
+      
+      const alliMessage = {
+        id: Date.now(),
+        sender: 'alli',
+        text: aiResponse,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, alliMessage]);
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      
+      // Fallback response
+      const fallbackMessage = {
+        id: Date.now(),
+        sender: 'alli',
+        text: 'I apologize, but I\'m having trouble processing your request right now. Please try again in a moment, or feel free to ask me about cybersecurity and scam detection!',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, fallbackMessage]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   // Handle image sharing from QuickScamScan
   useEffect(() => {
     if (context === 'image_share' && imageUrl && !processedImageRef.current) {
       processedImageRef.current = true;
       
-      // Upload image to Firebase Storage if we have a file
       const handleImageUpload = async () => {
         try {
           let finalImageUrl = imageUrl;
           
-          // If we have an imageFile, try Firebase Storage with fallback
           if (imageFile) {
             const userId = location.state?.userInfo?.uid || 'anonymous';
             try {
@@ -93,21 +242,18 @@ const Chat = () => {
             text: 'I received this image and would like you to analyze it for potential scams.',
             timestamp: new Date()
           };
-          setMessages(prev => [...prev, imageMessage]);
           
-          // Simulate Alli's response after a short delay
-          setTimeout(() => {
-            const alliResponse = {
-              id: Date.now() + 1,
-              sender: 'alli',
-              text: 'I can see the image you\'ve shared. Let me analyze it for potential scam indicators. This appears to be a suspicious email with several red flags that I can help you identify.',
-              timestamp: new Date()
-            };
-            setMessages(prev => [...prev, alliResponse]);
+          const updatedMessages = [...messages, imageMessage];
+          setMessages(updatedMessages);
+          
+          // Generate AI response for the image
+          const timeoutId = setTimeout(() => {
+            generateAIResponse(imageMessage, updatedMessages);
           }, 1000);
+          timeoutIds.current.push(timeoutId);
+          
         } catch (error) {
           console.error('Error uploading image:', error);
-          // Fallback to local URL if upload fails
           const imageMessage = {
             id: Date.now(),
             sender: 'user',
@@ -133,42 +279,36 @@ const Chat = () => {
         analysisResult: analysisResult,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, analysisMessage]);
       
-      // Simulate Alli's response after a short delay
-      setTimeout(() => {
-        const alliResponse = {
-          id: Date.now() + 1,
-          sender: 'alli',
-          text: `I can see your analysis results! The content you analyzed has a ${analysisResult.scamAnalysis.risk_level} risk level with a score of ${analysisResult.scamAnalysis.risk_score}/100. Let me help you understand what this means and provide additional guidance.`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, alliResponse]);
+      const updatedMessages = [...messages, analysisMessage];
+      setMessages(updatedMessages);
+      
+      // Generate AI response for the analysis
+      const timeoutId = setTimeout(() => {
+        generateAIResponse(analysisMessage, updatedMessages);
       }, 1000);
+      timeoutIds.current.push(timeoutId);
     }
   }, [context, imageUrl, location.state?.analysisResult]);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && !isTyping) {
       const userMessage = {
-        id: messages.length + 1,
+        id: Date.now(),
         sender: 'user',
-        text: newMessage,
+        text: newMessage.trim(),
         timestamp: new Date()
       };
-      setMessages([...messages, userMessage]);
+      
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
       setNewMessage('');
       
-      // Simulate Alli's response after a short delay
-      setTimeout(() => {
-        const alliResponse = {
-          id: messages.length + 2,
-          sender: 'alli',
-          text: 'Thanks for your message! I\'m here to help you stay safe online. What specific concerns do you have about cybersecurity?',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, alliResponse]);
-      }, 1000);
+      // Generate AI response
+      const timeoutId = setTimeout(() => {
+        generateAIResponse(userMessage, updatedMessages);
+      }, 500);
+      timeoutIds.current.push(timeoutId);
     }
   };
 
@@ -183,13 +323,11 @@ const Chat = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Please select an image file');
       return;
     }
 
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       alert('File size must be less than 10MB');
       return;
@@ -199,20 +337,18 @@ const Chat = () => {
     setUploadProgress(0);
     try {
       const userId = location.state?.userInfo?.uid || 'anonymous';
-      let imageUrl;
+      let uploadedImageUrl;
       
-      // Try Firebase Storage first with progress monitoring
       try {
         console.log('Attempting Firebase Storage upload with progress monitoring...');
-        imageUrl = await uploadImageToStorage(file, userId, 'chat-images', (progress) => {
+        uploadedImageUrl = await uploadImageToStorage(file, userId, 'chat-images', (progress) => {
           setUploadProgress(progress);
           console.log(`Upload progress: ${progress}%`);
         });
         console.log('Image uploaded to Firebase Storage successfully');
       } catch (storageError) {
         console.warn('Firebase Storage failed, using fallback method:', storageError);
-        // Fallback to base64 for development
-        imageUrl = await uploadImageAsBase64(file, userId);
+        uploadedImageUrl = await uploadImageAsBase64(file, userId);
         console.log('Image stored as base64 (temporary)');
       }
       
@@ -220,29 +356,26 @@ const Chat = () => {
         id: Date.now(),
         sender: 'user',
         type: 'image',
-        imageUrl: imageUrl,
+        imageUrl: uploadedImageUrl,
         text: 'I uploaded this image for analysis.',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, imageMessage]);
       
-      // Simulate Alli's response
-      setTimeout(() => {
-        const alliResponse = {
-          id: Date.now() + 1,
-          sender: 'alli',
-          text: 'I can see the image you\'ve uploaded. Let me analyze it for potential scam indicators.',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, alliResponse]);
+      const updatedMessages = [...messages, imageMessage];
+      setMessages(updatedMessages);
+      
+      // Generate AI response for the uploaded image
+      const timeoutId = setTimeout(() => {
+        generateAIResponse(imageMessage, updatedMessages);
       }, 1000);
+      timeoutIds.current.push(timeoutId);
+      
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('Failed to upload image. Please try again.');
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -312,7 +445,7 @@ const Chat = () => {
                       />
                     </div>
                   )}
-                  <p className="text-sm leading-relaxed">{message.text}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
                   <p className={`text-xs mt-1 ${
                     message.sender === 'user' ? 'text-blue-100' : 'text-blue-400'
                   }`}>
@@ -321,6 +454,27 @@ const Chat = () => {
                 </div>
               </div>
             ))}
+            
+            {/* Typing indicator */}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="flex-shrink-0 mr-3">
+                  <img
+                    src={alliAvatar}
+                    alt="Alli"
+                    className="w-10 h-10 rounded-full"
+                  />
+                </div>
+                <div className="bg-[#E6F0FF] text-[#0033A0] px-4 py-2 rounded-2xl">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
         </div>
@@ -328,39 +482,42 @@ const Chat = () => {
         {/* Message Input */}
         <div className="bg-white mx-4 mb-4 p-4 rounded-b-2xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-3">
-                         <button 
-               onClick={handleAttachmentClick}
-               disabled={isUploading}
-               className={`text-gray-400 hover:text-gray-600 transition-colors ${
-                 isUploading ? 'opacity-50 cursor-not-allowed' : ''
-               }`}
-             >
-               {isUploading ? (
-                 <div className="flex items-center gap-2">
-                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
-                   <span className="text-xs text-gray-500">{Math.round(uploadProgress)}%</span>
-                 </div>
-               ) : (
-                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                 </svg>
-               )}
-             </button>
+            <button 
+              onClick={handleAttachmentClick}
+              disabled={isUploading || isTyping}
+              className={`text-gray-400 hover:text-gray-600 transition-colors ${
+                (isUploading || isTyping) ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isUploading ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
+                  <span className="text-xs text-gray-500">{Math.round(uploadProgress)}%</span>
+                </div>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+              )}
+            </button>
             
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Message Alli"
-              className="flex-1 px-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0033A0] focus:bg-white transition-all"
+              placeholder={isTyping ? "Alli is typing..." : "Message Alli"}
+              disabled={isTyping}
+              className={`flex-1 px-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0033A0] focus:bg-white transition-all ${
+                isTyping ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             />
             
             <button
               onClick={handleSendMessage}
-              disabled={!newMessage.trim() || isUploading}
+              disabled={!newMessage.trim() || isUploading || isTyping}
               className={`p-3 rounded-xl transition-all ${
-                newMessage.trim() && !isUploading
+                newMessage.trim() && !isUploading && !isTyping
                   ? 'bg-[#0033A0] text-white hover:bg-[#002266]'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
