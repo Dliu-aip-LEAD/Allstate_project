@@ -4,6 +4,22 @@ import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import BackButton from '../components/BackButton';
 import { uploadImageToStorage, uploadImageAsBase64 } from '../utils/storage';
+import Tesseract from 'tesseract.js';
+
+
+/*
+//type scanResults = 
+{
+  //tesseractText: String;
+  //gptText: string;
+  //emails: string[];
+  //urls: string[];
+  //score: number; // 0-100
+  //summary?: string;
+
+
+} */
+
 
 const QuickScamScan = () => {
   const navigate = useNavigate();
@@ -21,7 +37,11 @@ const QuickScamScan = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-
+  const [ setOcrText] = useState('');
+  const [ setGptText] = useState('');
+  const [setExtractedEmails] = useState([]);
+  const [ setExtractedUrls] = useState([]);
+  const [ setPatternComparison] = useState('');
   // Get user info from location state or localStorage
   const userInfo = location.state?.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
   const userId = userInfo.uid || 'anonymous';
@@ -51,6 +71,138 @@ const QuickScamScan = () => {
       }
     } catch (error) {
       console.error('Error loading scan history:', error);
+    }
+  };
+
+    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const extractPatterns = (text) => {
+    const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g;
+    const urlPattern = /https?:\/\/[^\s)>\]]+|www\.[^\s)>\]]+/g;
+    const emails = Array.from(new Set(text.match(emailPattern) || []));
+    const urls = Array.from(new Set(text.match(urlPattern) || []));
+    return { emails, urls };
+  };
+
+    const Analyze = async () => {
+    if (!selectedFile && !manualText.trim()) {
+      setError('Please select an image');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setError(null);
+    setAnalysisResult(null);
+    setOcrText('');
+    setGptText('');
+    setExtractedEmails([]);
+    setExtractedUrls([]);
+    setPatternComparison('');
+
+    try {
+      let textToAnalyze = manualText.trim();
+      let imageUrl = previewUrl || '';
+
+      if (selectedFile) {
+      
+        const { data: { text: detectedText } } = await Tesseract.recognize(selectedFile, 'eng', {
+          logger: m => {
+            
+          }
+        });
+        setOcrText(detectedText);
+
+       
+        const { emails: ocrEmails, urls: ocrUrls } = extractPatterns(detectedText);
+        setExtractedEmails(ocrEmails);
+        setExtractedUrls(ocrUrls);
+
+       
+        const base64Image = await fileToBase64(selectedFile);
+
+        
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${"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"}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:image/jpeg;base64,${base64Image}`
+                    }
+                  },
+                  {
+                    type: 'text',
+                    text: 'Extract emails, URLs, and suspicious content from this image text.'
+                  }
+                ]
+              }
+            ],
+            temperature: 0,
+            max_tokens: 1000
+          })
+        });
+
+        if (!openaiResponse.ok) {
+          throw new Error('OpenAI API request failed');
+        }
+
+        const openaiData = await openaiResponse.json();
+        const gptExtractedText = openaiData.choices?.[0]?.message?.content || '';
+        setGptText(gptExtractedText);
+        const { emails: gptEmails, urls: gptUrls } = extractPatterns(gptExtractedText);
+        const emailsMatch = JSON.stringify(ocrEmails.sort()) === JSON.stringify(gptEmails.sort());
+        const urlsMatch = JSON.stringify(ocrUrls.sort()) === JSON.stringify(gptUrls.sort());
+
+        setPatternComparison(`Emails match: ${emailsMatch ? 'YES' : 'NO'}, URLs match: ${urlsMatch ? 'YES' : 'NO'}`);
+
+        textToAnalyze = gptExtractedText || detectedText;
+        imageUrl = previewUrl;
+      }
+
+    
+      const response = await fetch(
+        'https://us-central1-allstate-8f387.cloudfunctions.net/analyze_text_for_scams',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: textToAnalyze,
+            userId: userId,
+            imageUrl: imageUrl
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze text');
+      }
+
+      const result = await response.json();
+      setAnalysisResult(result);
+
+      await loadScanHistory();
+
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setError('Failed to analyze content. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -112,6 +264,8 @@ const QuickScamScan = () => {
     startCamera();
   };
 
+  
+
   const handleShareWithAlli = async () => {
     if (!selectedFile) return;
 
@@ -129,6 +283,8 @@ const QuickScamScan = () => {
         imageUrl = await uploadImageAsBase64(selectedFile, userId);
         console.log('Photo stored as base64 (temporary)');
       }
+
+      
 
       // Navigate to chat with the photo
       navigate('/chat', { 
@@ -181,7 +337,7 @@ const QuickScamScan = () => {
     fileInputRef.current?.click();
   };
 
-  const handleAnalyze = async () => {
+  /*const handleAnalyze = async () => {
     if (!selectedFile && !manualText.trim()) {
       setError('Please select an image or enter text to analyze');
       return;
@@ -236,7 +392,7 @@ const QuickScamScan = () => {
       setIsAnalyzing(false);
     }
   };
-
+*/
   const getRiskLevelColor = (riskLevel) => {
     switch (riskLevel) {
       case 'high':
@@ -327,7 +483,7 @@ const QuickScamScan = () => {
               {/* Image Preview or Text Input */}
               {previewUrl ? (
                 <div className="relative">
-                                     <img
+                                    <img
                      src={previewUrl}
                      alt="Preview"
                      className="w-full h-64 object-contain border rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
@@ -386,7 +542,7 @@ const QuickScamScan = () => {
 
               {/* Analyze Button */}
               <button
-                onClick={handleAnalyze}
+                onClick={Analyze}
                 disabled={isAnalyzing}
                 className={`w-full py-3 rounded-full font-semibold text-white transition-all ${
                   isAnalyzing
