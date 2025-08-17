@@ -4,6 +4,10 @@ import alliAvatar from '../assets/alli_question.png'; // Using the better detect
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import { uploadImageToStorage, uploadImageAsBase64 } from '../utils/storage';
+import { getUserProgress, defaultDetectiveAcademy } from '../utils/userProgress';
+import { getDepartment, getAvailableMissions } from '../data/missions';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { firestore, auth } from '../firebase';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -13,14 +17,82 @@ const Home = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Get user info from location state or localStorage
-  const userInfo = location.state?.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
-  const userId = userInfo.uid || 'anonymous';
+  // Get user info from Firebase Auth
+  const [userId, setUserId] = useState('anonymous');
 
   // Camera states
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Detective Academy states
+  const [detectiveData, setDetectiveData] = useState(defaultDetectiveAcademy);
+  const [loading, setLoading] = useState(false);
+  const [currentMission, setCurrentMission] = useState(null);
+
+  // Listen to Firebase Auth state changes
+  useEffect(() => {
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log('🔐 User authenticated:', user.uid);
+        setUserId(user.uid);
+      } else {
+        console.log('🔐 User not authenticated');
+        setUserId('anonymous');
+        setDetectiveData(defaultDetectiveAcademy);
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  // Load user progress data with real-time updates
+  useEffect(() => {
+    if (userId && userId !== 'anonymous') {
+      console.log('🔍 Setting up real-time listener for user:', userId);
+      
+      // Set up real-time listener for user document
+      const userRef = doc(firestore, 'users', userId);
+      const unsubscribe = onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          const userData = doc.data();
+          const progress = userData.detectiveAcademy || defaultDetectiveAcademy;
+          
+          console.log('📊 Real-time update received:', progress);
+          console.log('   User data:', userData);
+          console.log('   Detective academy:', progress);
+          setDetectiveData(progress);
+          
+          // Load current mission info if exists
+          if (progress.currentMissionId) {
+            const availableMissions = getAvailableMissions(progress);
+            const mission = availableMissions.find(m => m.id === progress.currentMissionId);
+            setCurrentMission(mission);
+          }
+          
+          setLoading(false);
+        } else {
+          console.log('❌ User document not found');
+          setDetectiveData(defaultDetectiveAcademy);
+          setLoading(false);
+        }
+      }, (error) => {
+        console.error('❌ Error in real-time listener:', error);
+        setLoading(false);
+      });
+      
+      // Cleanup function to unsubscribe when component unmounts
+      return () => {
+        console.log('🔍 Cleaning up real-time listener');
+        unsubscribe();
+      };
+    } else {
+      // Fallback to default data if no user ID
+      setDetectiveData(defaultDetectiveAcademy);
+      setLoading(false);
+    }
+  }, [userId]);
 
   // Cleanup camera stream on component unmount
   useEffect(() => {
@@ -30,6 +102,34 @@ const Home = () => {
       }
     };
   }, [stream]);
+
+  // Calculate progress percentage for level
+  const getLevelProgress = () => {
+    if (detectiveData.experienceToNextLevel === 0) return 100;
+    const currentLevelExp = detectiveData.experience - (detectiveData.experience - detectiveData.experienceToNextLevel);
+    const totalExpForLevel = detectiveData.experienceToNextLevel;
+    return Math.round((currentLevelExp / totalExpForLevel) * 100);
+  };
+
+  // Get next level info
+  const getNextLevelInfo = () => {
+    const currentLevel = detectiveData.level;
+    if (currentLevel >= 5) return null;
+    
+    const nextLevel = currentLevel + 1;
+    const levelNames = {
+      2: "Apprentice Detective",
+      3: "Mid-Level Detective", 
+      4: "Senior Detective",
+      5: "Expert Detective"
+    };
+    
+    return {
+      level: nextLevel,
+      name: levelNames[nextLevel] || `Level ${nextLevel}`,
+      expRequired: detectiveData.experienceToNextLevel
+    };
+  };
 
   // Camera functionality
   const startCamera = async () => {
@@ -98,18 +198,17 @@ const Home = () => {
         console.log('Photo uploaded to Firebase Storage:', imageUrl);
       } catch (storageError) {
         console.warn('Firebase Storage failed, using fallback method:', storageError);
-        imageUrl = await uploadImageAsBase64(file, userId);
-        console.log('Photo stored as base64 (temporary)');
+        imageUrl = await uploadImageAsBase64(file);
+        console.log('Photo uploaded as base64:', imageUrl);
       }
-
-      // Navigate to chat with the photo
+      
+      // Navigate to chat with the image
       navigate('/chat', { 
         state: { 
-          name: userInfo.displayName || name,
-          context: 'image_share',
-          imageUrl: imageUrl,
-          imageFile: file
-        }
+          imageUrl, 
+          userInfo: { uid: userId, name },
+          fromCamera: true 
+        } 
       });
     } catch (error) {
       console.error('Error uploading photo:', error);
@@ -119,54 +218,78 @@ const Home = () => {
     }
   };
 
-  const handleFileUpload = (event) => {
+  const handleQuickScanClick = (scanType) => {
+    switch (scanType) {
+      case 'Screenshot':
+        // Handle screenshot upload
+        fileInputRef.current?.click();
+        break;
+      case 'Upload File':
+        // Handle file upload
+        fileInputRef.current?.click();
+        break;
+      case 'Take Photo':
+        // Start camera
+        startCamera();
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
-        return;
-      }
-
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File size must be less than 10MB');
-        return;
-      }
-
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file);
-      
-      // Navigate to chat with the image
-      navigate('/chat', { 
-        state: { 
-          name: userInfo.displayName || name,
-          context: 'image_share',
-          imageUrl: previewUrl,
-          imageFile: file
-        }
-      });
+      await handlePhotoUpload(file);
     }
   };
 
-  const handleScreenshotClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleQuickScanClick = (label) => {
-    if (label === "Screenshot") {
-      handleScreenshotClick();
-    } else if (label === "Take Photo") {
-      startCamera();
-    } else {
-      navigate('/quick-scam-scan', { state: { userInfo: { uid: 'user123', displayName: name } } });
-    }
-  };
+  const nextLevelInfo = getNextLevelInfo();
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 w-full">
       {/* Header */}
       <Header variant="home" />
+
+      {/* Camera Modal */}
+      {showCamera && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-4 max-w-md w-full mx-4">
+            <div className="relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full rounded-xl"
+              />
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={capturePhoto}
+                className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold"
+              >
+                📸 Capture
+              </button>
+              <button
+                onClick={stopCamera}
+                className="flex-1 bg-gray-600 text-white py-3 rounded-xl font-semibold"
+              >
+                ❌ Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
 
       {/* Main Content */}
       <main className="flex-1 px-4 py-6 space-y-6 pt-20">
@@ -246,7 +369,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Detective Academy */}
+        {/* Detective Academy - Updated with user data */}
         <section className="bg-gradient-to-br from-blue-700 to-indigo-700 p-5 rounded-2xl shadow-lg text-white">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -261,36 +384,53 @@ const Home = () => {
                   className="w-full h-full object-cover object-center" 
                 />
               </div>
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold">1</div>
+              {detectiveData.currentMissionId && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold">1</div>
+              )}
             </div>
           </div>
 
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1">
-              <p className="text-white font-semibold text-sm">🏆 Junior Detective</p>
-              <p className="text-blue-100 text-xs">Level 3 of 5 • Next: Senior Detective</p>
+              <p className="text-white font-semibold text-sm">🏆 {detectiveData.levelName}</p>
+              {nextLevelInfo ? (
+                <p className="text-blue-100 text-xs">Level {detectiveData.level} of 5 • Next: {nextLevelInfo.name}</p>
+              ) : (
+                <p className="text-blue-100 text-xs">Level {detectiveData.level} of 5 • Maximum Level Reached!</p>
+              )}
               <div className="mt-2 w-full bg-white/20 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: '60%' }}></div>
+                <div 
+                  className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${getLevelProgress()}%` }}
+                ></div>
               </div>
             </div>
             <div className="bg-white/20 text-white px-3 py-1 rounded-full text-xs font-semibold border border-white/30">
-              350 PTS
+              {detectiveData.experience} PTS
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 mb-4">
-            <p className="text-yellow-400 text-xs font-semibold uppercase tracking-wide">🟢 Active Mission</p>
-            <p className="text-white font-semibold text-sm">Spot the Phishing Email</p>
-            <p className="text-blue-100 text-xs">Detective Alli needs your help identifying suspicious messages</p>
-          </div>
+          {currentMission ? (
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 mb-4">
+              <p className="text-yellow-400 text-xs font-semibold uppercase tracking-wide">🟢 Active Mission</p>
+              <p className="text-white font-semibold text-sm">{currentMission.title}</p>
+              <p className="text-blue-100 text-xs">Detective Alli needs your help with this investigation</p>
+            </div>
+          ) : (
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 mb-4">
+              <p className="text-blue-400 text-xs font-semibold uppercase tracking-wide">📋 No Active Mission</p>
+              <p className="text-white font-semibold text-sm">Ready for your next case?</p>
+              <p className="text-blue-100 text-xs">Start a new mission to continue your training</p>
+            </div>
+          )}
 
           <div className="flex gap-3 mb-4">
             <div className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-center">
-              <p className="text-white text-lg font-bold">5</p>
+              <p className="text-white text-lg font-bold">{detectiveData.missionsCompleted}</p>
               <p className="text-blue-100 text-xs">Missions Solved</p>
             </div>
             <div className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-center">
-              <p className="text-white text-lg font-bold">85%</p>
+              <p className="text-white text-lg font-bold">{detectiveData.successRate}%</p>
               <p className="text-blue-100 text-xs">Success Rate</p>
             </div>
           </div>
@@ -299,73 +439,12 @@ const Home = () => {
             onClick={() => navigate('/play')}
             className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-sm transition-all duration-200 shadow-sm"
           >
-            Start Training Mission
+            {currentMission ? 'Continue Mission' : 'Start New Mission'}
           </button>
         </section>
       </main>
 
-      {/* Hidden file input for screenshot upload */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileUpload}
-        className="hidden"
-      />
-
-      {/* Camera Interface */}
-      {showCamera && (
-        <div className="fixed inset-0 bg-black z-50 flex flex-col">
-          {/* Camera Header */}
-          <div className="bg-black text-white p-4 flex items-center justify-between">
-            <button
-              onClick={stopCamera}
-              className="text-white hover:text-gray-300"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <h3 className="text-lg font-semibold">Take Photo</h3>
-            <div className="w-6"></div> {/* Spacer for centering */}
-          </div>
-
-          {/* Camera View */}
-          <div className="flex-1 relative">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
-            
-            {/* Camera Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="border-2 border-white border-dashed rounded-lg w-80 h-60 opacity-50"></div>
-            </div>
-          </div>
-
-          {/* Camera Controls */}
-          <div className="bg-black p-6 flex items-center justify-center">
-            <button
-              onClick={capturePhoto}
-              disabled={isUploading}
-              className="bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
-            >
-              {isUploading ? (
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400"></div>
-              ) : (
-                <div className="bg-white rounded-full w-12 h-12 border-4 border-gray-300"></div>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Hidden canvas for photo capture */}
-      <canvas ref={canvasRef} className="hidden" />
-
-      {/* Bottom Nav */}
+      {/* Bottom Navigation */}
       <BottomNav />
     </div>
   );
