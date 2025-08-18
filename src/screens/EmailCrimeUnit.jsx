@@ -6,6 +6,8 @@ import BackButton from '../components/BackButton';
 import MissionCard from '../components/MissionCard';
 import { missions } from '../data/missions';
 import { getUserProgress, defaultDetectiveAcademy } from '../utils/userProgress';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { firestore, auth } from '../firebase';
 
 const EmailCrimeUnit = () => {
   console.log('EmailCrimeUnit component rendered');
@@ -14,27 +16,62 @@ const EmailCrimeUnit = () => {
   const [detectiveData, setDetectiveData] = useState(defaultDetectiveAcademy);
   const [loading, setLoading] = useState(true);
 
-  // Get user info from location state or localStorage
-  const userInfo = location.state?.userInfo || JSON.parse(localStorage.getItem('userInfo') || '{}');
-  const userId = userInfo.uid || 'anonymous';
+  // Get user info from Firebase Auth
+  const [userId, setUserId] = useState('anonymous');
 
-  // Load user progress data
+  // Listen to Firebase Auth state changes
   useEffect(() => {
-    const loadUserProgress = async () => {
-      if (userId && userId !== 'anonymous') {
-        try {
-          const progress = await getUserProgress(userId);
-          if (progress) {
-            setDetectiveData(progress);
-          }
-        } catch (error) {
-          console.error('Error loading user progress:', error);
-        }
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log('🔐 EmailCrimeUnit: User authenticated:', user.uid);
+        setUserId(user.uid);
+      } else {
+        console.log('🔐 EmailCrimeUnit: User not authenticated');
+        setUserId('anonymous');
+        setDetectiveData(defaultDetectiveAcademy);
+        setLoading(false);
       }
-      setLoading(false);
-    };
+    });
 
-    loadUserProgress();
+    return () => unsubscribeAuth();
+  }, []);
+
+  // Load user progress data with real-time updates
+  useEffect(() => {
+    if (userId && userId !== 'anonymous') {
+      console.log('🔍 Setting up real-time listener for EmailCrimeUnit user:', userId);
+      
+      // Set up real-time listener for user document
+      const userRef = doc(firestore, 'users', userId);
+      const unsubscribe = onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          const userData = doc.data();
+          const progress = userData.detectiveAcademy || defaultDetectiveAcademy;
+          
+          console.log('📊 EmailCrimeUnit real-time update received:', progress);
+          setDetectiveData(progress);
+          setLoading(false);
+        } else {
+          console.log('❌ User document not found in EmailCrimeUnit');
+          setDetectiveData(defaultDetectiveAcademy);
+          setLoading(false);
+        }
+      }, (error) => {
+        console.error('❌ Error in EmailCrimeUnit real-time listener:', error);
+        setDetectiveData(defaultDetectiveAcademy);
+        setLoading(false);
+      });
+      
+      // Cleanup function to unsubscribe when component unmounts
+      return () => {
+        console.log('🔍 Cleaning up EmailCrimeUnit real-time listener');
+        unsubscribe();
+      };
+    } else {
+      // Fallback to default data if no user ID
+      setDetectiveData(defaultDetectiveAcademy);
+      setLoading(false);
+    }
   }, [userId]);
 
   // Generate missions based on user progress and unlock requirements
@@ -85,12 +122,12 @@ const EmailCrimeUnit = () => {
     const requirements = mission.unlockRequirements;
     
     // Check level requirement
-    if (detectiveData.level < requirements.minimumLevel) {
+    if (detectiveData.level < (requirements.minimumLevel || 1)) {
       return false;
     }
     
     // Check previous missions requirement
-    if (requirements.previousMissions.length > 0) {
+    if (requirements.previousMissions && requirements.previousMissions.length > 0) {
       for (const prevMissionId of requirements.previousMissions) {
         const prevMission = missions[prevMissionId];
         if (prevMission) {
@@ -115,9 +152,10 @@ const EmailCrimeUnit = () => {
 
   // Get mission status
   const getMissionStatus = (missionId) => {
-    // Check if mission is completed
-    const completedMissions = detectiveData.completedMissions || [];
-    if (completedMissions.includes(missionId)) {
+    // Check if mission is completed using missionHistory
+    const missionHistory = detectiveData.missionHistory || [];
+    const completedMission = missionHistory.find(m => m.missionId === missionId);
+    if (completedMission) {
       return 'completed';
     }
     
@@ -138,11 +176,11 @@ const EmailCrimeUnit = () => {
   const getUnlockRequirementText = (mission) => {
     const requirements = [];
     
-    if (detectiveData.level < mission.unlockRequirements.minimumLevel) {
-      requirements.push(`Level ${mission.unlockRequirements.minimumLevel}`);
+    if (detectiveData.level < (mission.unlockRequirements.minimumLevel || 1)) {
+      requirements.push(`Level ${mission.unlockRequirements.minimumLevel || 1}`);
     }
     
-    if (mission.unlockRequirements.previousMissions.length > 0) {
+    if (mission.unlockRequirements.previousMissions && mission.unlockRequirements.previousMissions.length > 0) {
       const prevMissionNames = mission.unlockRequirements.previousMissions
         .map(id => missions[id]?.title || id)
         .join(', ');

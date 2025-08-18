@@ -99,6 +99,16 @@ import('./testMissionService.js').then(module => {
   console.warn('⚠️ Could not load testMissionService:', error);
 });
 
+// Load mission unlock debug test
+import('./testMissionUnlockDebug.js').then(module => {
+  if (module.default && typeof window !== 'undefined') {
+    window.testMissionUnlockDebug = module.default;
+    console.log('✅ testMissionUnlockDebug loaded');
+  }
+}).catch(error => {
+  console.warn('⚠️ Could not load testMissionUnlockDebug:', error);
+});
+
 // Load mission logic test
 import('./testMissionLogic.js').then(module => {
   if (module.default && typeof window !== 'undefined') {
@@ -159,6 +169,16 @@ import('./testPlayPageData.js').then(module => {
   console.warn('⚠️ Could not load testPlayPage:', error);
 });
 
+// Load EmailCrimeUnit real-time test
+import('./testEmailCrimeUnitRealTime.js').then(module => {
+  if (module.default && typeof window !== 'undefined') {
+    window.testEmailCrimeUnitRealTime = module.default;
+    console.log('✅ testEmailCrimeUnitRealTime loaded');
+  }
+}).catch(error => {
+  console.warn('⚠️ Could not load testEmailCrimeUnitRealTime:', error);
+});
+
 // Alternative: Load test functions directly if dynamic imports fail
 if (typeof window !== 'undefined') {
   // Create a simple test loader function
@@ -184,7 +204,9 @@ if (typeof window !== 'undefined') {
         import('./testMissionHistory.js'),
         import('./testRealTimeUpdates.js'),
         import('./testHomePageData.js'),
-        import('./testPlayPageData.js')
+        import('./testPlayPageData.js'),
+        import('./testMissionUnlockDebug.js'),
+        import('./testEmailCrimeUnitRealTime.js')
       ]);
       
       // Assign to window object
@@ -205,6 +227,8 @@ if (typeof window !== 'undefined') {
       if (modules[14]?.default) window.testRealTimeUpdates = modules[14].default;
       if (modules[15]?.default) window.testHomePage = modules[15].default;
       if (modules[16]?.default) window.testPlayPage = modules[16].default;
+      if (modules[17]?.default) window.testMissionUnlockDebug = modules[17].default;
+      if (modules[18]?.default) window.testEmailCrimeUnitRealTime = modules[18].default;
       
       console.log('✅ All test functions loaded successfully!');
       console.log('Available test functions:');
@@ -220,6 +244,8 @@ if (typeof window !== 'undefined') {
       console.log('- window.testRealTimeUpdates');
       console.log('- window.testHomePage');
       console.log('- window.testPlayPage');
+      console.log('- window.testMissionUnlockDebug');
+      console.log('- window.testEmailCrimeUnitRealTime');
       
     } catch (error) {
       console.error('❌ Error loading test functions:', error);

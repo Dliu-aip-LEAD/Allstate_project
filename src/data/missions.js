@@ -109,9 +109,7 @@ export const missions = {
     },
     
     unlockRequirements: {
-      previousMissions: [],
-      minimumLevel: 1,
-      minimumScore: 0
+      minimumLevel: 1
     }
   },
 
@@ -268,9 +266,7 @@ Bank of America`
     },
     
     unlockRequirements: {
-      previousMissions: [],
-      minimumLevel: 1,
-      minimumScore: 0
+      minimumLevel: 1
     }
   },
 
@@ -454,9 +450,9 @@ CEO`
     },
     
     unlockRequirements: {
-      previousMissions: [],
-      minimumLevel: 1,
-      minimumScore: 0
+      
+      minimumLevel: 1
+     
     }
   },
 
@@ -635,9 +631,9 @@ P.S. Looking forward to catching up properly after we resolve this security issu
     },
     
     unlockRequirements: {
-      previousMissions: ['email-imposter'],
-      minimumLevel: 2,
-      minimumScore: 80
+     
+      minimumLevel: 2
+      
     }
   },
 
@@ -809,9 +805,8 @@ Netflix, Inc. | 100 Winchester Circle | Los Gatos, CA 95032`
     },
     
     unlockRequirements: {
-      previousMissions: ['spear-phishing'],
-      minimumLevel: 2,
-      minimumScore: 85
+      
+      minimumLevel: 2
     }
   },
 
@@ -960,9 +955,9 @@ This communication contains information that is confidential and privileged. If 
     },
     
     unlockRequirements: {
-      previousMissions: ['fake-account'],
-      minimumLevel: 3,
-      minimumScore: 90
+      
+      minimumLevel: 3
+     
     }
   },
 
@@ -1135,9 +1130,9 @@ CONFIDENTIAL: This email contains privileged and confidential information intend
     },
     
     unlockRequirements: {
-      previousMissions: ['wire-transfer'],
-      minimumLevel: 3,
-      minimumScore: 95
+      
+      minimumLevel: 3
+      
     }
   },
 
