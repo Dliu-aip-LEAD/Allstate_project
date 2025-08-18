@@ -88,9 +88,9 @@ const customizeUserProfile = (onboardingAnswers) => {
   const customizations = {};
   
   if (onboardingAnswers) {
-    // Age-based customizations
-    if (onboardingAnswers.age) {
-      const age = onboardingAnswers.age.value;
+    // Age-based customizations (question ID: 1)
+    if (onboardingAnswers[1]) {
+      const age = onboardingAnswers[1].value;
       if (age === 'under_18' || age === 'over_65') {
         customizations.riskLevel = 'high';
         customizations.recommendedMissions = ['email-imposter', 'social-media-scam'];
@@ -103,9 +103,9 @@ const customizeUserProfile = (onboardingAnswers) => {
       }
     }
     
-    // Experience-based customizations
-    if (onboardingAnswers.experience) {
-      const experience = onboardingAnswers.experience.value;
+    // Experience-based customizations (question ID: 2)
+    if (onboardingAnswers[2]) {
+      const experience = onboardingAnswers[2].value;
       if (experience === 'expert') {
         customizations.startingLevel = 2;
         customizations.experienceMultiplier = 1.2;
@@ -119,9 +119,9 @@ const customizeUserProfile = (onboardingAnswers) => {
       }
     }
     
-    // Online activity-based customizations
-    if (onboardingAnswers.activity) {
-      const activity = onboardingAnswers.activity.value;
+    // Online activity-based customizations (question ID: 3)
+    if (onboardingAnswers[3]) {
+      const activity = onboardingAnswers[3].value;
       if (activity === 'online_shopping') {
         customizations.priorityDepartment = 'financial-crimes';
         customizations.riskAreas = ['payment_scams', 'fake_websites'];
@@ -134,9 +134,9 @@ const customizeUserProfile = (onboardingAnswers) => {
       }
     }
     
-    // Knowledge-based customizations
-    if (onboardingAnswers.knowledge) {
-      const knowledge = onboardingAnswers.knowledge.value;
+    // Knowledge-based customizations (question ID: 4)
+    if (onboardingAnswers[4]) {
+      const knowledge = onboardingAnswers[4].value;
       if (knowledge === 'very_little') {
         customizations.tutorialRequired = true;
         customizations.startingDifficulty = 'beginner';
@@ -178,22 +178,23 @@ export const createProfileSummary = (onboardingAnswers) => {
 // Get human-readable question text
 const getQuestionText = (key) => {
   const questionMap = {
-    age: "Age Group",
-    experience: "Online Experience",
-    activity: "Primary Online Activity",
-    knowledge: "Scam Knowledge Level"
+    1: "Age Group",
+    2: "Online Experience", 
+    3: "Primary Online Activity",
+    4: "Scam Knowledge Level"
   };
   
-  return questionMap[key] || key.replace(/([A-Z])/g, ' $1').trim();
+  return questionMap[key] || key.toString();
 };
 
 // Validate onboarding answers
 export const validateOnboardingAnswers = (onboardingAnswers) => {
   if (!onboardingAnswers) return false;
   
-  const requiredFields = ['age', 'experience', 'activity', 'knowledge'];
-  const hasAllFields = requiredFields.every(field => 
-    onboardingAnswers[field] && onboardingAnswers[field].value
+  // Check for the 4 required onboarding questions (IDs 1, 2, 3, 4)
+  const requiredFields = [1, 2, 3, 4];
+  const hasAllFields = requiredFields.every(fieldId => 
+    onboardingAnswers[fieldId] && onboardingAnswers[fieldId].value
   );
   
   return hasAllFields;

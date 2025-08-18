@@ -9,10 +9,10 @@ export const testOnboardingValidation = () => {
   
   // Test valid onboarding answers
   const validAnswers = {
-    age: { label: '30-49 years old', value: '30_49' },
-    experience: { label: 'Regular user', value: 'regular' },
-    activity: { label: 'Online shopping and banking', value: 'online_shopping' },
-    knowledge: { label: 'Some knowledge', value: 'some_knowledge' }
+    1: { label: '30-49 years old', value: '30_49' },
+    2: { label: 'Regular user', value: 'regular' },
+    3: { label: 'Online shopping and banking', value: 'online_shopping' },
+    4: { label: 'Some knowledge', value: 'some_knowledge' }
   };
   
   const isValid = validateOnboardingAnswers(validAnswers);
@@ -20,8 +20,8 @@ export const testOnboardingValidation = () => {
   
   // Test invalid onboarding answers (missing fields)
   const invalidAnswers = {
-    age: { label: '30-49 years old', value: '30_49' },
-    experience: { label: 'Regular user', value: 'regular' }
+    1: { label: '30-49 years old', value: '30_49' },
+    2: { label: 'Regular user', value: 'regular' }
     // Missing activity and knowledge
   };
   
@@ -36,10 +36,10 @@ export const testProfileSummary = () => {
   console.log('🧪 Testing profile summary creation...');
   
   const onboardingAnswers = {
-    age: { label: '50-64 years old', value: '50_64' },
-    experience: { label: 'Expert', value: 'expert' },
-    activity: { label: 'Work emails and video calls', value: 'work_emails' },
-    knowledge: { label: 'A lot', value: 'a_lot' }
+    1: { label: '50-64 years old', value: '50_64' },
+    2: { label: 'Expert', value: 'expert' },
+    3: { label: 'Work emails and video calls', value: 'work_emails' },
+    4: { label: 'A lot', value: 'a_lot' }
   };
   
   const summary = createProfileSummary(onboardingAnswers);
@@ -57,10 +57,10 @@ export const testNewUserInitialization = async () => {
     name: 'Test User',
     email: 'test@example.com',
     onboardingAnswers: {
-      age: { label: '18-29 years old', value: '18_29' },
-      experience: { label: 'Casual user', value: 'casual' },
-      activity: { label: 'Social media and messaging', value: 'social_media' },
-      knowledge: { label: 'A little', value: 'a_little' }
+      1: { label: '18-29 years old', value: '18_29' },
+      2: { label: 'Casual user', value: 'casual' },
+      3: { label: 'Social media and messaging', value: 'social_media' },
+      4: { label: 'A little', value: 'a_little' }
     }
   };
   
@@ -82,10 +82,10 @@ export const testOnboardingFlow = () => {
   
   // Step 1: User answers onboarding questions
   const onboardingAnswers = {
-    age: { label: 'Over 65+', value: 'over_65' },
-    experience: { label: 'New to technology', value: 'new' },
-    activity: { label: 'Basic browsing/entertainment', value: 'basic_browsing' },
-    knowledge: { label: 'Very little', value: 'very_little' }
+    1: { label: 'Over 65+', value: 'over_65' },
+    2: { label: 'New to technology', value: 'new' },
+    3: { label: 'Basic browsing/entertainment', value: 'basic_browsing' },
+    4: { label: 'Very little', value: 'very_little' }
   };
   
   console.log('📋 Step 1: Onboarding answers collected:', onboardingAnswers);
