@@ -107,7 +107,8 @@ const EmailCrimeUnit = () => {
         icon: getMissionIcon(missionId),
         difficulty: mission.difficulty,
         estimatedTime: mission.estimatedTime,
-        maxScore: mission.scoring.maxScore,
+        maxScore: mission.scoring.maxScore, 
+        XPReward: mission.scoring.xpReward,
         unlocked: isUnlocked,
         unlockRequirement: unlockRequirement
       };

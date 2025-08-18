@@ -105,7 +105,8 @@ export const missions = {
       maxScore: 100,
       scorePerFlag: 15,
       scorePerQuiz: 25,
-      bonusPoints: 10
+      bonusPoints: 10,
+      xpReward: 50
     },
     
     unlockRequirements: {
@@ -262,7 +263,8 @@ Bank of America`
       maxScore: 100,
       scorePerFlag: 12,
       scorePerQuiz: 20,
-      bonusPoints: 15
+      bonusPoints: 15,
+      xpReward: 50
     },
     
     unlockRequirements: {
@@ -446,7 +448,8 @@ CEO`
       maxScore: 100,
       scorePerFlag: 10,
       scorePerQuiz: 15,
-      bonusPoints: 20
+      bonusPoints: 20,
+      xpReward: 50
     },
     
     unlockRequirements: {
@@ -624,10 +627,11 @@ P.S. Looking forward to catching up properly after we resolve this security issu
     },
     
     scoring: {
-      maxScore: 150,
+      maxScore: 100,
       scorePerFlag: 15,
       scorePerQuiz: 25,
-      bonusPoints: 30
+      bonusPoints: 30,
+      xpReward: 75
     },
     
     unlockRequirements: {
@@ -798,10 +802,11 @@ Netflix, Inc. | 100 Winchester Circle | Los Gatos, CA 95032`
   },
     
     scoring: {
-      maxScore: 125,
+      maxScore: 100,
       scorePerFlag: 15,
       scorePerQuiz: 20,
-      bonusPoints: 25
+      bonusPoints: 25,
+      xpReward: 75
     },
     
     unlockRequirements: {
@@ -948,10 +953,11 @@ This communication contains information that is confidential and privileged. If 
     },
     
     scoring: {
-      maxScore: 200,
+      maxScore: 100,
       scorePerFlag: 20,
       scorePerQuiz: 30,
-      bonusPoints: 50
+      bonusPoints: 50,
+      xpReward: 75
     },
     
     unlockRequirements: {
@@ -1123,10 +1129,11 @@ CONFIDENTIAL: This email contains privileged and confidential information intend
     },
     
     scoring: {
-      maxScore: 300,
+      maxScore: 100,
       scorePerFlag: 25,
       scorePerQuiz: 50,
-      bonusPoints: 100
+      bonusPoints: 100,
+      xpReward: 100
     },
     
     unlockRequirements: {

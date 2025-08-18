@@ -46,7 +46,7 @@ const MissionCard = ({ mission, onClick, className = '' }) => {
               ⏱️ {mission.estimatedTime} min
             </span>
             <span className={`${isLocked ? 'text-gray-500' : 'text-gray-400'}`}>
-              🎯 {mission.maxScore} pts
+              🎯 {mission.XPReward} pts
             </span>
             <span className={`${isLocked ? 'text-gray-500' : 'text-gray-400'}`}>
               📊 {mission.difficulty}
