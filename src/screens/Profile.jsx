@@ -49,10 +49,10 @@ const Profile = () => {
             setFormData({
               fullName: data.name || '',
               email: user.email || '',
-              ageGroup: onboardingAnswers.age?.label || '30-49 years old',
-              techExperience: onboardingAnswers.experience?.label || 'Regular User',
-              primaryActivity: onboardingAnswers.activity?.label || 'Online shopping and banking',
-              cybersecurityKnowledge: onboardingAnswers.knowledge?.label || 'Some knowledge'
+              ageGroup: onboardingAnswers[1]?.label || '30-49 years old',
+              techExperience: onboardingAnswers[2]?.label || 'Regular User',
+              primaryActivity: onboardingAnswers[3]?.label || 'Online shopping and banking',
+              cybersecurityKnowledge: onboardingAnswers[4]?.label || 'Some knowledge'
             });
             
             setLoading(false);
@@ -93,29 +93,29 @@ const Profile = () => {
         
         // Map form data back to onboarding answers structure
         if (formData.ageGroup) {
-          updatedOnboardingAnswers.age = {
-            ...updatedOnboardingAnswers.age,
+          updatedOnboardingAnswers[1] = {
+            ...updatedOnboardingAnswers[1],
             label: formData.ageGroup
           };
         }
         
         if (formData.techExperience) {
-          updatedOnboardingAnswers.experience = {
-            ...updatedOnboardingAnswers.experience,
+          updatedOnboardingAnswers[2] = {
+            ...updatedOnboardingAnswers[2],
             label: formData.techExperience
           };
         }
         
         if (formData.primaryActivity) {
-          updatedOnboardingAnswers.activity = {
-            ...updatedOnboardingAnswers.activity,
+          updatedOnboardingAnswers[3] = {
+            ...updatedOnboardingAnswers[3],
             label: formData.primaryActivity
           };
         }
         
         if (formData.cybersecurityKnowledge) {
-          updatedOnboardingAnswers.knowledge = {
-            ...updatedOnboardingAnswers.knowledge,
+          updatedOnboardingAnswers[4] = {
+            ...updatedOnboardingAnswers[4],
             label: formData.cybersecurityKnowledge
           };
         }
