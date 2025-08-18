@@ -3,7 +3,7 @@ import onboard1 from '../assets/alli_question.png';
 export const onboardingQuestions = [
   {
     id: 1,
-    question: " First question - what's your age group? This helps me understand what types of scams you might encounter! 🕵️‍♂️",
+    question: "  First question - what's your age group? This helps me understand what types of scams you might encounter! 🕵️‍♂️",
     image: onboard1,
     imageAlt: "Detective Alli",
     options: [
