@@ -289,7 +289,7 @@ const MissionComplete = () => {
                     {index + 1}
                   </div>
                   <div className="text-sm text-red-800 font-medium">
-                    {typeof item === 'string' ? item : item.text || 'Evidence found'}
+                    {typeof item === 'string' ? item : item.redFlag || item.text || item.title || 'Evidence found'}
                   </div>
                 </div>
               ))}

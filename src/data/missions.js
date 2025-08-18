@@ -48,7 +48,7 @@ export const missions = {
       },
       
       quizzes: {
-        definition1: {
+        phishing: {
           text: "📧 What is 'phishing' in cybersecurity?",
           options: [
             { text: "A legitimate way to verify email addresses", correct: false },
@@ -58,7 +58,7 @@ export const missions = {
           ],
           feedback: "Correct! Phishing emails pretend to be from trusted sources to trick you into sharing sensitive data."
         },
-        definition2: {
+        typosquatting: {
           text: "🎯 What does 'typosquatting' mean?",
           options: [
             { text: "Making typos in email content", correct: false },
@@ -68,7 +68,7 @@ export const missions = {
           ],
           feedback: "Exactly! Typosquatting uses fake domains like 'gooogle.com' to trick users."
         },
-        recognition: {
+        bec: {
           text: "🚨 Which scenario describes Business Email Compromise (BEC)?",
           options: [
             { text: "Spam emails selling products", correct: false },
@@ -77,6 +77,26 @@ export const missions = {
             { text: "Password reset notifications", correct: false }
           ],
           feedback: "Perfect! BEC often involves impersonating executives to authorize fraudulent financial transactions."
+        },
+        spoofing: {
+          text: "🕵️ What is 'email spoofing'?",
+          options: [
+            { text: "Encrypting an email so others can't read it", correct: false },
+            { text: "Forging the sender address to appear from someone else", correct: true },
+            { text: "Using emojis in email subjects", correct: false },
+            { text: "Forwarding an email without consent", correct: false }
+          ],
+          feedback: "Right! Spoofing forges the 'From' address to trick recipients into trusting the message."
+        },
+        pretext: {
+          text: "🎭 What does 'pretexting' involve?",
+          options: [
+            { text: "Pretending to be busy to ignore emails", correct: false },
+            { text: "Creating a believable story to gain trust and extract information", correct: true },
+            { text: "Sending texts before emails", correct: false },
+            { text: "Hiding email headers from recipients", correct: false }
+          ],
+          feedback: "Exactly. Pretexting builds a false scenario to manipulate victims into sharing data or access."
         }
       }
     },
@@ -130,6 +150,17 @@ Failure to comply will result in account termination and legal action.
 Best Regards,
 Security Team
 Bank of America`
+      },
+      
+      // Add bodyHotspots to map suspicious text fragments to clues
+      bodyHotspots: {
+        // 'SUSPICIOUS ACTIVITY': 'excessiveUrgency',
+        'PERMANENTLY CLOSED in 24 hours': 'excessiveUrgency',
+        'http://secure-bankofamerica-verify.tk/login': 'suspiciousLink',
+        'Full Social Security Number': 'sensitiveInfo',
+        'Complete Credit Card Details': 'sensitiveInfo',
+        'Online Banking Password': 'sensitiveInfo',
+        'Dear Valued Customer': 'poorGrammar'
       },
       
       clues: {
@@ -275,8 +306,17 @@ This must be completed by 5 PM today or we'll lose the deal. Please confirm once
 Do not discuss this with anyone until the acquisition is announced.
 
 Best regards,
-Michael Chen
+Michael Johnson
 CEO`
+      },
+      
+      // Add bodyHotspots to map suspicious text fragments to clues
+      bodyHotspots: {
+        // 'urgent wire transfer': 'pressure',
+        'confidential acquisition': 'secrecy',
+        'This must be completed by 5 PM today': 'deadline',
+        'Do not discuss this with anyone': 'silence',
+        'Michael Johnson': 'signature'
       },
       
       clues: {
@@ -295,11 +335,11 @@ CEO`
           description: "The reply-to address uses a temporary email service, not the company's official domain.",
           redFlag: "Reply-to address doesn't match sender"
         },
-        pressure: {
-          title: "Pressure Tactics",
-          description: "The word 'urgent' is used to create stress and bypass normal verification procedures.",
-          redFlag: "Psychological pressure tactics"
-        },
+        // pressure: {
+        //   title: "Pressure Tactics",
+        //   description: "The word 'urgent' is used to create stress and bypass normal verification procedures.",
+        //   redFlag: "Psychological pressure tactics"
+        // },
         secrecy: {
           title: "Enforced Secrecy",
           description: "Legitimate business transactions don't typically require secrecy from the finance team.",
@@ -462,6 +502,17 @@ TechCorp Partners LLC
 📧 sarah.martinez@techcorp-partners.com
 
 P.S. Looking forward to catching up properly after we resolve this security issue!`
+      },
+      
+      // Add bodyHotspots to map suspicious text fragments to clues
+      bodyHotspots: {
+        'I saw your LinkedIn post about the company retreat in Denver': 'personalInfo',
+        'Azure migration project we discussed last month': 'projectKnowledge',
+        'critical vulnerability that affects the cloud infrastructure': 'urgentTechnical',
+        'must be addressed by tomorrow\'s deployment': 'urgentTechnical',
+        'enter your TechCorp credentials to verify your identity': 'credentialHarvesting',
+        'James Chen from the cybersecurity conference in Austin last year': 'mutualConnection',
+        'Senior Security Consultant': 'roleImpersonation'
       },
       
       clues: {
@@ -643,6 +694,15 @@ This email was sent to you because you have a Netflix account. If you no longer 
 Netflix, Inc. | 100 Winchester Circle | Los Gatos, CA 95032`
       },
       
+      // Add bodyHotspots to map suspicious text fragments to clues
+      bodyHotspots: {
+        'loss of your viewing history, watchlist, and personalized recommendations': 'timelyThreat',
+        'https://netflix-account-billing.com/update-payment': 'fakeUrl',
+        'Your current email and password': 'credentialRequest',
+        'your account will be permanently deleted along with all your saved content': 'timelyThreat',
+        'The Netflix Team': 'lookingReal'
+      },
+      
       clues: {
         replyMismatch: {
           title: "Reply-To Domain Mismatch",
@@ -804,6 +864,17 @@ Direct: (555) 987-6543
 This communication contains information that is confidential and privileged. If you are not the intended recipient, please delete this message.`
       },
       
+      // Add bodyHotspots to map suspicious text fragments to clues
+      bodyHotspots: {
+        'deadline is 3:00 PM EST today': 'urgentDeadline',
+        'do not discuss this transfer with anyone else in the firm, including David or Jennifer': 'isolationTactic',
+        'I\'ll be unreachable for the next 2 hours': 'unverifiableAbsence',
+        'must remain confidential until the deal closes': 'confidentialityAbuse',
+        'The partnership has been working on this acquisition for 6 months and we cannot afford to lose it': 'emotionalPressure',
+        'First National Business Bank': 'bankingDetails',
+        'Account #: 847592-18493': 'bankingDetails'
+      },
+      
       clues: {
         compromisedAccount: {
           title: "Potentially Compromised Account",
@@ -951,6 +1022,17 @@ TechGlobal Corporation
 
 ---
 CONFIDENTIAL: This email contains privileged and confidential information intended only for the addressee. If you have received this email in error, please notify the sender and delete this message.`
+      },
+      
+      // Add bodyHotspots to map suspicious text fragments to clues
+      bodyHotspots: {
+        'COB Friday to commit, as they have competing offers': 'subtleUrgency',
+        'Q3 planning sessions': 'contextualKnowledge',
+        'infrastructure services': 'contextualKnowledge',
+        'board approved in yesterday\'s emergency session': 'boardAuthority',
+        'CloudTech Acquisition Escrow LLC': 'bankingDetails',
+        'Account: 4847293501847': 'bankingDetails',
+        'I\'ve asked my assistant to hold my calls this afternoon': 'unverifiableAbsence'
       },
       
       clues: {
@@ -1209,3 +1291,5 @@ export const getAvailableMissions = (userProgress) => {
   
   return availableMissions;
 }; 
+
+

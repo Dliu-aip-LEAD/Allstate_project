@@ -7,6 +7,51 @@ import { missions } from '../data/missions';
 import { completeMission } from '../services/missionService';
 import { auth } from '../firebase';
 
+// Add CSS styles for hotspots
+const hotspotStyles = `
+  .hotspot-text {
+    cursor: pointer;
+    padding: 1px 2px;
+    border-radius: 3px;
+    transition: all 0.2s;
+    display: inline-block;
+    position: relative;
+  }
+  
+  .hotspot-text:hover {
+    background: rgba(59, 130, 246, 0.2) !important;
+    border: 1px solid #3b82f6 !important;
+    transform: scale(1.02);
+  }
+  
+  .hotspot-text.investigated {
+    background: rgba(16, 185, 129, 0.2) !important;
+    border: 1px solid #10b981 !important;
+  }
+  
+  .hotspot-text.investigated:hover {
+    background: rgba(16, 185, 129, 0.3) !important;
+  }
+  
+  /* Responsive layout styles */
+  @media (min-width: 1280px) {
+    .mission-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 1.5rem;
+      height: 100%;
+    }
+  }
+  
+  @media (max-width: 1279px) {
+    .mission-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+  }
+`;
+
 const EmailCrimeInvestigation = () => {
   const navigate = useNavigate();
   const { missionId } = useParams();
@@ -26,27 +71,7 @@ const EmailCrimeInvestigation = () => {
   const [loading, setLoading] = useState(true);
   const [mission, setMission] = useState(null);
   const [messages, setMessages] = useState([]);
-
-  useEffect(() => {
-    // Load mission data from missions.js
-    if (missionId && missions[missionId]) {
-      const missionData = missions[missionId];
-      setMission(missionData);
-      
-      // Initialize messages based on mission type
-      initializeMessages(missionData);
-      
-      // Calculate score per step
-      const totalSteps = Object.keys(missionData.content.clues || {}).length;
-      const scorePerStep = totalSteps > 0 ? Math.round(missionData.scoring.maxScore / totalSteps) : 0;
-      
-      setTotalQuestions(totalSteps);
-      setLoading(false);
-    } else {
-      // Mission not found
-      navigate('/training/email-crimes');
-    }
-  }, [missionId, navigate]);
+  const [correctQuizCount, setCorrectQuizCount] = useState(0); // 新增：跟踪答对的题目数量
 
   // Initialize messages based on mission type
   const initializeMessages = (missionData) => {
@@ -96,16 +121,18 @@ const EmailCrimeInvestigation = () => {
     setMessages(initialMessages);
   };
 
-  // Calculate score per step
+  // Calculate score per step - now considers both hotspots and quizzes
   const getScorePerStep = () => {
     if (!mission) return 0;
-    const totalSteps = Object.keys(mission.content.clues || {}).length;
-    return totalSteps > 0 ? Math.round(mission.scoring.maxScore / totalSteps) : 0;
+    const totalHotspots = Object.keys(mission.content.clues || {}).length;
+    const totalQuizzes = Object.keys(mission.content.quizzes || {}).length;
+    const totalSteps = totalHotspots + totalQuizzes;
+    return totalSteps > 0 ? Math.round(100 / totalSteps) : 0;
   };
 
   const addMessage = (text, sender) => {
     const newMessage = {
-      id: Date.now(),
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       sender,
       text
     };
@@ -114,7 +141,7 @@ const EmailCrimeInvestigation = () => {
 
   const addEvidence = (text) => {
     const newEvidence = {
-      id: Date.now(),
+      id: `evid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       text
     };
     setEvidence(prev => [...prev, newEvidence]);
@@ -123,7 +150,13 @@ const EmailCrimeInvestigation = () => {
 
   const updateScore = (points) => {
     if (!mission) return;
-    setScore(prev => Math.min(prev + points, mission.scoring.maxScore));
+    
+    // Simply accumulate points, let useEffect handle the 100-point logic
+    setScore(prevScore => {
+      const newScore = Math.min(prevScore + points, 100);
+      console.log(`Score update: ${prevScore} + ${points} = ${newScore}`);
+      return newScore;
+    });
   };
 
   const updateAccuracy = () => {
@@ -138,66 +171,162 @@ const EmailCrimeInvestigation = () => {
     const quiz = mission.content.quizzes[clueKey];
     
     if (clue) {
+      // Mark as investigated
       setInvestigatedHotspots(prev => new Set([...prev, clueKey]));
-      addEvidence(clue.redFlag);
-      addMessage(`🔍 Good eye! You found: ${clue.title}. ${clue.description}`, 'alli');
+      setFlagsFound(prev => prev + 1);
       
-      // If there's NO quiz, award points immediately
-      if (!quiz) {
-        updateScore(mission.scoring.scorePerFlag);
-      }
+      // Calculate score for this hotspot
+      const scorePerStep = getScorePerStep();
+      updateScore(scorePerStep);
       
-      // If there's a quiz, add it to pending queue
+      // Add message about the clue
+      addMessage(`🚩 Red Flag Found: ${clue.redFlag}`, 'alli');
+      addMessage(`📝 ${clue.description}`, 'alli');
+      
+      // Add to evidence
+      setEvidence(prev => [...prev, {
+        id: `evid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'redFlag',
+        clue: clueKey,
+        title: clue.title,
+        description: clue.description,
+        redFlag: clue.redFlag
+      }]);
+      
+      // If there's a quiz for this clue, handle it immediately
       if (quiz) {
-        setPendingQuizzes(prev => [...prev, { clueKey, quiz }]);
+        console.log(`Adding quiz for ${clueKey}:`, quiz.text);
         
-        // Start first quiz if none is currently active
+        // If no quiz is currently active, start this one immediately
         if (!currentQuiz) {
-          startNextQuiz();
+          console.log('Starting quiz immediately for:', clueKey);
+          setCurrentQuiz({ clueKey, quiz });
+          setQuizAnswered(false);
+        } else {
+          // Add to pending queue if another quiz is active
+          console.log('Adding to pending queue:', clueKey);
+          setPendingQuizzes(prev => {
+            const newQuizzes = [...prev, { clueKey, quiz }];
+            console.log('Updated pending quizzes:', newQuizzes.map(q => q.clueKey));
+            return newQuizzes;
+          });
         }
+      } else {
+        console.log(`No quiz found for clue: ${clueKey}`);
       }
-    }
-  };
-
-  const showTooltip = (event, text) => {
-    if (tooltipRef.current) {
-      tooltipRef.current.textContent = text;
-      tooltipRef.current.style.left = event.pageX + 'px';
-      tooltipRef.current.style.top = (event.pageY - 40) + 'px';
-      tooltipRef.current.style.opacity = '1';
-    }
-  };
-
-  const hideTooltip = () => {
-    if (tooltipRef.current) {
-      tooltipRef.current.style.opacity = '0';
     }
   };
 
   const handleHotspotMouseEnter = (event, clueKey) => {
-    if (!mission) return;
+    if (!mission || investigatedHotspots.has(clueKey)) return;
+    
     const clue = mission.content.clues[clueKey];
-    if (clue && !investigatedHotspots.has(clueKey)) {
-      showTooltip(event, `Click to investigate: ${clue.title}`);
+    if (clue) {
+      // Show tooltip
+      if (tooltipRef.current) {
+        tooltipRef.current.textContent = `Click to investigate: ${clue.title}`;
+        tooltipRef.current.style.display = 'block';
+        tooltipRef.current.style.opacity = '1';
+        tooltipRef.current.style.left = event.pageX + 10 + 'px';
+        tooltipRef.current.style.top = event.pageY - 30 + 'px';
+      }
     }
   };
 
   const handleHotspotMouseLeave = () => {
-    hideTooltip();
+    if (tooltipRef.current) {
+      tooltipRef.current.style.opacity = '0';
+      setTimeout(() => {
+        if (tooltipRef.current) {
+          tooltipRef.current.style.display = 'none';
+        }
+      }, 200);
+    }
   };
 
+  useEffect(() => {
+    // Load mission data from missions.js
+    if (missionId && missions[missionId]) {
+      const missionData = missions[missionId];
+      setMission(missionData);
+      
+      // Initialize messages based on mission type
+      initializeMessages(missionData);
+      
+      // Calculate score per step
+      const totalSteps = Object.keys(missionData.content.clues || {}).length;
+      const scorePerStep = totalSteps > 0 ? Math.round(missionData.scoring.maxScore / totalSteps) : 0;
+      
+      setTotalQuestions(totalSteps);
+      setLoading(false);
+    } else {
+      // Mission not found
+      navigate('/training/email-crimes');
+    }
+    
+    // Add hotspot styles to document
+    const styleElement = document.createElement('style');
+    styleElement.textContent = hotspotStyles;
+    document.head.appendChild(styleElement);
+    
+    // Cleanup function to remove styles
+    return () => {
+      if (styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
+    };
+  }, [missionId, navigate]);
+
+  // Add effect to handle hotspot clicks after component mounts
+  useEffect(() => {
+    if (!mission || !mission.content.bodyHotspots) return;
+    
+    // Add click event listeners to hotspots
+    const handleDocumentClick = (event) => {
+      const target = event.target;
+      if (target.classList.contains('hotspot-text')) {
+        const clueKey = target.getAttribute('data-clue');
+        if (clueKey && mission.content.clues[clueKey]) {
+          // Use the same logic as handleHotspotClick
+          handleHotspotClick(clueKey);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleDocumentClick);
+    
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [mission]);
+
+  // Add effect to automatically set score to 100 when all conditions are met
+  useEffect(() => {
+    if (!mission) return;
+    
+    const totalHotspots = Object.keys(mission.content.clues || {}).length;
+    const totalQuizzes = Object.keys(mission.content.quizzes || {}).length;
+    
+    // Check if all hotspots are clicked and all quizzes are answered correctly
+    if (investigatedHotspots.size >= totalHotspots && correctQuizCount >= totalQuizzes) {
+      console.log(`🎯 Perfect completion detected! Hotspots: ${investigatedHotspots.size}/${totalHotspots}, Correct quizzes: ${correctQuizCount}/${totalQuizzes}. Setting score to 100.`);
+      setScore(100);
+    }
+  }, [mission, investigatedHotspots.size, correctQuizCount]);
+
   const startNextQuiz = () => {
+    console.log('startNextQuiz called, pendingQuizzes:', pendingQuizzes);
     if (pendingQuizzes.length > 0) {
       const nextQuiz = pendingQuizzes[0];
+      console.log('Starting quiz for:', nextQuiz.clueKey);
       setCurrentQuiz(nextQuiz);
       setPendingQuizzes(prev => prev.slice(1));
       setQuizAnswered(false);
     } else {
+      console.log('No more quizzes pending');
       setCurrentQuiz(null);
-      // Mission complete if all hotspots investigated
-      if (mission && investigatedHotspots.size === Object.keys(mission.content.clues || {}).length) {
-        handleMissionCompletion();
-      }
+      // Don't auto-complete mission, let user click View Results button
+      // Mission completion logic moved to handleMissionCompletion
     }
   };
 
@@ -207,8 +336,11 @@ const EmailCrimeInvestigation = () => {
     
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
-      // Award points for correct quiz answers
-      updateScore(mission.scoring.scorePerQuiz);
+      setCorrectQuizCount(prev => prev + 1); // 新增：答对题目时增加计数
+      // Award points for correct quiz answers using new scoring system
+      const scorePerStep = getScorePerStep();
+      updateScore(scorePerStep);
+      console.log(`Quiz answered correctly! +${scorePerStep} points. Current score: ${score + scorePerStep}, Correct quiz count: ${correctQuizCount + 1}`);
       addMessage(feedback, 'alli');
     } else {
       addMessage(`Not quite right. ${feedback}`, 'alli');
@@ -218,6 +350,15 @@ const EmailCrimeInvestigation = () => {
     setTimeout(() => {
       setCurrentQuiz(null);
       setQuizAnswered(false);
+      
+      // Check if this was the last quiz
+      const totalHotspots = Object.keys(mission.content.clues || {}).length;
+      const totalQuizzes = Object.keys(mission.content.quizzes || {}).length;
+      const totalSteps = totalHotspots + totalQuizzes;
+      const completedSteps = investigatedHotspots.size + correctAnswers;
+      
+      console.log(`Quiz completed. Total steps: ${totalSteps}, Completed: ${completedSteps}, Score: ${score}, Correct quiz count: ${correctQuizCount}`);
+      
       startNextQuiz();
     }, isCorrect ? 2000 : 3000);
   };
@@ -226,14 +367,14 @@ const EmailCrimeInvestigation = () => {
     if (!mission) return;
 
     try {
-      // Calculate final results
-      const finalScore = score + (correctAnswers * mission.scoring.scorePerQuiz);
+      // Calculate final results - score is already calculated during gameplay
+      const finalScore = score; // Use the current score directly
       const finalAccuracy = updateAccuracy();
       
       // Prepare user performance data
       const userPerformance = {
         score: finalScore,
-        maxScore: mission.scoring.maxScore,
+        maxScore: 100, // Always 100 for new scoring system
         flagsFound,
         totalQuestions,
         correctAnswers,
@@ -282,12 +423,12 @@ const EmailCrimeInvestigation = () => {
       
       // Navigate to complete page with results
       navigate(`/mission/${missionId}/complete`, { 
-        state: { missionResults } 
+        state: { missionResults: userPerformance } 
       });
       
     } catch (error) {
       console.error('Error completing mission:', error);
-      // Still navigate to complete page even if database update fails
+      // Still navigate to completion page even if database update fails
       navigate(`/mission/${missionId}/complete`);
     }
   };
@@ -296,14 +437,14 @@ const EmailCrimeInvestigation = () => {
     if (!mission) return;
     
     try {
-      // Calculate final results based on current progress
-      const finalScore = score + (correctAnswers * mission.scoring.scorePerQuiz);
+      // Calculate final results - use current score directly (no duplicate calculation)
+      const finalScore = score; // Score is already calculated during gameplay
       const finalAccuracy = updateAccuracy();
       
       const finalProgress = {
         missionId,
         score: finalScore,
-        maxScore: mission.scoring.maxScore,
+        maxScore: 100, // Always 100 for new scoring system
         flagsFound,
         totalQuestions,
         correctAnswers,
@@ -328,7 +469,7 @@ const EmailCrimeInvestigation = () => {
           console.log('Leveled up:', result.leveledUp);
           console.log('New achievements:', result.newAchievements.length);
           
-          // Navigate to completion page with results
+          // Navigate to complete page with results
           navigate(`/mission/${missionId}/complete`, { 
             state: { 
               missionResults: result.missionResult,
@@ -349,19 +490,61 @@ const EmailCrimeInvestigation = () => {
         }
       }
       
-      // Navigate to completion page for anonymous users
+      // Navigate to complete page with results
       navigate(`/mission/${missionId}/complete`, { 
         state: { missionResults: finalProgress } 
       });
       
     } catch (error) {
-      console.error('Error submitting investigation:', error);
+      console.error('Error submitting mission:', error);
       // Still navigate to completion page even if database update fails
-      navigate(`/mission/${missionId}/complete`, { 
-        state: { missionResults: finalProgress } 
-      });
+      navigate(`/mission/${missionId}/complete`);
     }
   };
+
+  // Function to generate dynamic tips based on user progress
+  const generateTipsContent = () => {
+    if (currentQuiz) {
+      return {
+        title: 'Quiz Available!',
+        message: `You've found a red flag! Complete the quiz in the Detective Panel to earn points and continue your investigation.`,
+        icon: '🧠',
+        color: 'yellow',
+        showReward: true
+      };
+    }
+    
+    if (investigatedHotspots.size === 0) {
+      return {
+        title: 'Welcome to the Investigation!',
+        message: `Click on highlighted suspicious text in the email above to investigate red flags. Each red flag you discover will unlock a quiz to test your knowledge.`,
+        icon: '🔍',
+        color: 'blue',
+        showReward: false
+      };
+    }
+    
+    if (investigatedHotspots.size < Object.keys(mission.content.clues || {}).length) {
+      const remaining = Object.keys(mission.content.clues || {}).length - investigatedHotspots.size;
+      return {
+        title: 'Investigation in Progress',
+        message: `Great work! You've found ${investigatedHotspots.size} red flags. Keep investigating to find ${remaining} more suspicious elements.`,
+        icon: '🚩',
+        color: 'green',
+        showReward: false
+      };
+    }
+    
+    return {
+      title: 'Investigation Complete!',
+      message: `Excellent detective work! You've found all the red flags. Submit your investigation to see your final score.`,
+      icon: '🎉',
+      color: 'green',
+      showReward: false
+    };
+  };
+
+  const tipsContent = generateTipsContent();
 
   // Render content based on mission type
   const renderMissionContent = () => {
@@ -442,39 +625,122 @@ const EmailCrimeInvestigation = () => {
           from: 'fakeDomain',
           subject: 'excessiveUrgency',
           replyTo: 'replyMismatch',
-          body: 'suspiciousLink'
+        //   body: 'suspiciousLink'
         };
       } else if (mission.id === 'email-imposter') {
         return {
           from: 'domain',
           subject: 'urgency',
           replyTo: 'reply',
-          body: 'pressure'
+        //   body: 'pressure'
         };
       } else if (mission.id === 'spear-phishing') {
         return {
           from: 'domainSimilarity',
           subject: 'urgentTechnical',
-          body: 'personalInfo'
+        //   body: 'personalInfo'
         };
       } else if (mission.id === 'fake-account') {
         return {
           from: 'spoofedSender',
           subject: 'timelyThreat',
           replyTo: 'replyMismatch',
-          body: 'credentialRequest'
+        //   body: 'credentialRequest'
         };
       } else if (mission.id === 'wire-transfer') {
         return {
           from: 'roleImpersonation',
           subject: 'urgency',
-          body: 'pressure'
+        //   body: 'pressure'
         };
       }
       return {};
     };
 
     const clueMapping = getClueMapping();
+    
+    // Function to render email body with hotspots
+    const renderEmailBodyWithHotspots = () => {
+      if (!mission.content.bodyHotspots) {
+        return <div>{emailContent.body.split('\n').map((line, index) => (
+          <div key={index}>{line}<br/></div>
+        ))}</div>;
+      }
+
+      const hotspots = mission.content.bodyHotspots;
+      
+      // Sort hotspots by length (longest first) to avoid partial matches
+      const sortedHotspots = Object.keys(hotspots).sort((a, b) => b.length - a.length);
+      
+      // Function to render text with hotspots
+      const renderTextWithHotspots = (text) => {
+        let result = [];
+        let lastIndex = 0;
+        
+        sortedHotspots.forEach(hotspotText => {
+          // Use case-insensitive search
+          const searchText = text.toLowerCase();
+          const searchHotspot = hotspotText.toLowerCase();
+          const index = searchText.indexOf(searchHotspot, lastIndex);
+          if (index !== -1) {
+            // Add text before hotspot
+            if (index > lastIndex) {
+              result.push(text.slice(lastIndex, index));
+            }
+            
+            // Add hotspot
+            const clueKey = hotspots[hotspotText];
+            const isInvestigated = investigatedHotspots.has(clueKey);
+            
+            // Get the actual text from the original text (preserve case)
+            const actualText = text.slice(index, index + hotspotText.length);
+            
+            result.push(
+              <span
+                key={`${clueKey}-${index}`}
+                className={`hotspot-text ${isInvestigated ? 'investigated' : ''}`}
+                data-clue={clueKey}
+                onClick={() => handleHotspotClick(clueKey)}
+                onMouseEnter={(e) => handleHotspotMouseEnter(e, clueKey)}
+                onMouseLeave={handleHotspotMouseLeave}
+                style={{
+                  cursor: 'pointer',
+                  padding: '1px 2px',
+                  borderRadius: '3px',
+                  transition: 'all 0.2s',
+                  display: 'inline-block',
+                  position: 'relative',
+                  backgroundColor: isInvestigated ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                  border: isInvestigated ? '1px solid #10b981' : '1px dashed #3b82f6'
+                }}
+              >
+                {actualText}
+              </span>
+            );
+            
+            lastIndex = index + hotspotText.length;
+          }
+        });
+        
+        // Add remaining text
+        if (lastIndex < text.length) {
+          result.push(text.slice(lastIndex));
+        }
+        
+        return result;
+      };
+      
+      return (
+        <div>
+          {emailContent.body.split('\n').map((line, index) => (
+            <div key={index}>
+              {renderTextWithHotspots(line)}
+              <br/>
+            </div>
+          ))}
+        </div>
+      );
+    };
     
     return (
       <div className="bg-white bg-opacity-95 rounded-2xl overflow-hidden shadow-lg">
@@ -484,19 +750,67 @@ const EmailCrimeInvestigation = () => {
             <span className="font-semibold">Evidence Analysis</span>
           </div>
           <div className="flex gap-2">
-            <button className="bg-white bg-opacity-10 border border-white border-opacity-20 rounded px-3 py-1 text-xs hover:bg-opacity-20 transition-all">
+            {/* <button className="bg-white bg-opacity-10 border border-white border-opacity-20 text-black text-bold rounded px-3 py-1 text-xs hover:bg-opacity-20 transition-all">
               🔍 Magnify
             </button>
-            <button className="bg-white bg-opacity-10 border border-white border-opacity-20 rounded px-3 py-1 text-xs hover:bg-opacity-20 transition-all">
+            <button className="bg-white bg-opacity-10 border border-white border-opacity-20 text-black text-bold rounded px-3 py-1 text-xs hover:bg-opacity-20 transition-all">
               🚩 Flag
             </button>
-            <button className="bg-white bg-opacity-10 border border-white border-opacity-20 rounded px-3 py-1 text-xs hover:bg-opacity-20 transition-all">
+            <button className="bg-white bg-opacity-10 border border-white border-opacity-20 text-black text-bold rounded px-3 py-1 text-xs hover:bg-opacity-20 transition-all">
               ✅ Verify
-            </button>
+            </button> */}
           </div>
         </div>
         
-        <div className="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="p-6">
+          {/* Tips Section */}
+          <div className={`mb-4 md:mb-6 p-3 md:p-4 rounded-lg border transition-all duration-300 ${
+            tipsContent.color === 'yellow' 
+              ? 'bg-yellow-50 border-yellow-200' 
+              : tipsContent.color === 'green'
+              ? 'bg-green-50 border-green-200'
+              : 'bg-blue-50 border-blue-200'
+          }`}>
+            <div className="flex items-start gap-2 md:gap-3">
+              <div className={`text-base md:text-lg ${
+                tipsContent.color === 'yellow' 
+                  ? 'text-yellow-600' 
+                  : tipsContent.color === 'green'
+                  ? 'text-green-600'
+                  : 'text-blue-600'
+              }`}>
+                {tipsContent.icon}
+              </div>
+              <div className="flex-1">
+                <div className={`font-semibold mb-1 text-sm md:text-base ${
+                  tipsContent.color === 'yellow' 
+                    ? 'text-yellow-800' 
+                    : tipsContent.color === 'green'
+                    ? 'text-green-800'
+                    : 'text-blue-800'
+                }`}>
+                  {tipsContent.title}
+                </div>
+                <div className={`text-xs md:text-sm ${
+                  tipsContent.color === 'yellow' 
+                    ? 'text-yellow-700' 
+                    : tipsContent.color === 'green'
+                    ? 'text-green-700'
+                    : 'text-blue-700'
+                }`}>
+                  {tipsContent.message}
+                </div>
+                {tipsContent.showReward && (
+                  <div className={`mt-2 text-xs ${
+                    tipsContent.color === 'yellow' ? 'text-yellow-600' : 'text-green-600'
+                  }`}>
+                    💰 Quiz reward: {mission.scoring.scorePerQuiz} points
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Email Header */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 font-mono text-sm">
             <div className="mb-2">
@@ -532,7 +846,7 @@ const EmailCrimeInvestigation = () => {
                 {emailContent.subject}
               </span>
               {clueMapping.subject && !investigatedHotspots.has(clueMapping.subject) && (
-                <span className="ml-2 text-blue-600 text-xs">!</span>
+                <span className="text-blue-600 text-xs">!</span>
               )}
             </div>
             {emailContent.replyTo && (
@@ -549,37 +863,16 @@ const EmailCrimeInvestigation = () => {
                   {emailContent.replyTo}
                 </span>
                 {clueMapping.replyTo && !investigatedHotspots.has(clueMapping.replyTo) && (
-                  <span className="ml-2 text-blue-600 text-xs">!</span>
+                  <span className="text-blue-600 text-xs">!</span>
                 )}
               </div>
             )}
           </div>
 
-          {/* Email Body */}
+          {/* Email Body with Hotspots */}
           <div className="bg-white border border-gray-200 rounded-lg p-6 text-sm leading-relaxed">
-            <div dangerouslySetInnerHTML={{ __html: emailContent.body.replace(/\n/g, '<br/>') }} />
+            {renderEmailBodyWithHotspots()}
           </div>
-          
-          {/* Additional Hotspots in Email Body */}
-          {clueMapping.body && (
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="text-sm text-yellow-800 mb-2">
-                <span className="font-semibold">💡 Tip:</span> Look for suspicious elements in the email content above
-              </div>
-              <button
-                className={`px-3 py-2 rounded text-sm transition-all ${
-                  investigatedHotspots.has(clueMapping.body) 
-                    ? 'bg-green-100 text-green-800 border border-green-300' 
-                    : 'bg-blue-100 text-blue-800 border border-blue-300 hover:bg-blue-200'
-                }`}
-                onClick={() => handleHotspotClick(clueMapping.body)}
-                onMouseEnter={(e) => handleHotspotMouseEnter(e, clueMapping.body)}
-                onMouseLeave={handleHotspotMouseLeave}
-              >
-                {investigatedHotspots.has(clueMapping.body) ? '✓ Content Analyzed' : '🔍 Analyze Email Content'}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -599,7 +892,7 @@ const EmailCrimeInvestigation = () => {
           </div>
         </div>
         
-        <div className="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="p-6">
           {/* Profile Header */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-4 mb-4">
@@ -703,12 +996,20 @@ const EmailCrimeInvestigation = () => {
   const totalSteps = Object.keys(mission.content.clues || {}).length;
   const scorePerStep = getScorePerStep();
 
+  const isMissionComplete = () => {
+    const totalHotspots = Object.keys(mission.content.clues || {}).length;
+    const hotspotsComplete = investigatedHotspots.size === totalHotspots;
+    const quizzesComplete = !currentQuiz && pendingQuizzes.length === 0;
+    return hotspotsComplete && quizzesComplete;
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-800 to-slate-700">
       {/* Investigation Header */}
       <div className="bg-black bg-opacity-40 backdrop-blur-md border-b border-white border-opacity-10 px-4 py-3 pt-20 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto">
+          {/* Desktop Layout (md and up) - original style */}
+          <div className="md:flex justify-between items-center">
             <div className="flex items-center gap-3">
               <BackButton onClick={() => navigate(`/mission/${missionId}/introduction`)} />
               <div className="flex items-center gap-3">
@@ -719,7 +1020,7 @@ const EmailCrimeInvestigation = () => {
               </div>
             </div>
             <div className="flex items-center gap-4 text-white text-sm">
-              <span>Step {investigatedHotspots.size} of {totalSteps}</span>
+              <span>Investigated: {investigatedHotspots.size} of {totalSteps}</span>
               <div className="w-24 h-1.5 bg-white bg-opacity-20 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-green-500 transition-all duration-500"
@@ -735,17 +1036,20 @@ const EmailCrimeInvestigation = () => {
               </button>
             </div>
           </div>
+
         </div>
       </div>
 
-      <div className="flex-1 max-w-6xl mx-auto w-full p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 h-full">
+      <div className="flex-1 max-w-7xl mx-auto w-full p-2 md:p-4">
+        <div className="mission-layout grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-3 md:gap-6 h-full min-h-0">
           
           {/* Mission Content Panel */}
-          {renderMissionContent()}
+          <div className="min-h-0 overflow-hidden">
+            {renderMissionContent()}
+          </div>
 
           {/* Detective Assistant Panel */}
-          <div>
+          <div className="min-h-0 h-full">
             <DetectivePanel
               messages={messages}
               currentQuiz={currentQuiz}
@@ -755,7 +1059,7 @@ const EmailCrimeInvestigation = () => {
               score={score}
               flagsFound={flagsFound}
               accuracy={updateAccuracy()}
-              isMissionComplete={investigatedHotspots.size === totalSteps}
+              isMissionComplete={isMissionComplete()}
               onCompleteMission={handleMissionCompletion}
             />
           </div>
@@ -771,11 +1075,11 @@ const EmailCrimeInvestigation = () => {
         }}
       >
         <div className="relative">
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+          <div className="absolute top-full left-1/2 transform -translate-x(-50%) border-4 border-transparent border-t-gray-800"></div>
         </div>
       </div>
 
-      <BottomNav />
+      {/* Bottom Navigation removed from this page */}
     </div>
   );
 };
