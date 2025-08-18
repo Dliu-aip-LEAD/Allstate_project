@@ -246,6 +246,16 @@ const Home = () => {
 
   const nextLevelInfo = getNextLevelInfo();
 
+       const questionAnswer = (question) => {
+        console.log("Navigating with question:", question);
+          navigate(`/chat?question=${encodeURIComponent(question)}`,{
+            state: {
+              name:userInfo.displayName || name
+            }
+          })
+
+        }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 w-full">
       {/* Header */}
@@ -320,6 +330,7 @@ const Home = () => {
               {["Is this email safe?", "What are romance scams?"].map((q, i) => (
                 <button
                   key={i}
+                  onClick={() => questionAnswer(q)}
                   className="w-full text-left bg-blue-50 hover:bg-blue-100 p-3 rounded-xl text-sm text-blue-700 transition-colors duration-200"
                 >
                   "{q}"
@@ -328,13 +339,18 @@ const Home = () => {
             </div>
           </div>
 
+
+
           <button
             onClick={() => navigate('/chat')}
             className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-sm transition-all duration-200 shadow-sm"
           >
             Chat with Detective Alli
           </button>
+
+          
         </section>
+
 
         {/* Quick Scam Scan */}
         <section className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
