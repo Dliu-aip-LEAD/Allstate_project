@@ -33,7 +33,7 @@ export const createMissionResult = (missionData, userPerformance) => {
 
 // Calculate experience points based on mission performance
 export const calculateExperiencePoints = (missionData, userPerformance) => {
-  const baseExp = missionData.rewards?.experiencePoints || 50;
+  const baseExp = 50;
   const scoreMultiplier = userPerformance.score / missionData.scoring.maxScore;
   const accuracyBonus = userPerformance.accuracy >= 80 ? 1.2 : 1.0;
   const difficultyMultiplier = getDifficultyMultiplier(missionData.difficulty);
