@@ -8,7 +8,19 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "serve -s dist -l 3000"
+    "start": "serve -s dist -l 3000",
+    "test:database": "node -e \"console.log('Database test script loaded. Run in browser console: window.testDatabase.runAllTests()')\"",
+    "test:registration": "node -e \"console.log('User registration test script loaded. Run in browser console: window.testUserRegistration.runAllRegistrationTests()')\"",
+    "test:profile": "node -e \"console.log('Profile integration test script loaded. Run in browser console: window.testProfileIntegration.runAllProfileTests()')\"",
+    "test:play": "node -e \"console.log('Play page test script loaded. Run in browser console: window.testPlayPage.runAllPlayPageTests()')\"",
+    "test:departments": "node -e \"console.log('Department unlock test script loaded. Run in browser console: window.testDepartmentUnlock.runAllDepartmentTests()')\"",
+    "test:email-crimes": "node -e \"console.log('Email Crimes missions test script loaded. Run in browser console: window.testEmailCrimes.runAllEmailCrimesTests()')\"",
+    "test:email-crime-unit": "node -e \"console.log('EmailCrimeUnit page test script loaded. Run in browser console: window.testEmailCrimeUnitPage.runAllEmailCrimeUnitTests()')\"",
+    "test:mission-introduction": "node -e \"console.log('MissionIntroduction page test script loaded. Run in browser console: window.testMissionIntroduction.runAllMissionIntroductionTests()')\"",
+    "test:email-crime-investigation": "node -e \"console.log('EmailCrimeInvestigation page test script loaded. Run in browser console: window.testEmailCrimeInvestigation.runAllEmailCrimeInvestigationTests()')\"",
+    "test:hotspot-fix": "node -e \"console.log('EmailCrimeInvestigation hotspot fix test script loaded. Run in browser console: window.testEmailCrimeInvestigationFix.runAllHotspotTests()')\"",
+    "migrate:data": "node -e \"console.log('Data migration script loaded. Import and run: migrateExistingUsers()')\"",
+    "check:integrity": "node -e \"console.log('Data integrity check script loaded. Import and run: checkUserDataIntegrity(userId)')\""
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",

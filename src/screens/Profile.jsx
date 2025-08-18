@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { auth, firestore } from '../firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import Header from '../components/Header';
 import RoundedButton from '../components/RoundedButton';
 import BottomNav from '../components/BottomNav';
+import { getUserProgress, defaultDetectiveAcademy } from '../utils/userProgress';
 
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [detectiveData, setDetectiveData] = useState(defaultDetectiveAcademy);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -26,25 +28,51 @@ const Profile = () => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setUser(user);
-        try {
-          const userDoc = await getDoc(doc(firestore, 'users', user.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
+        console.log('🔍 Setting up real-time listener for Profile page user:', user.uid);
+        
+        // Set up real-time listener for user document
+        const userRef = doc(firestore, 'users', user.uid);
+        const userUnsubscribe = onSnapshot(userRef, (doc) => {
+          if (doc.exists()) {
+            const data = doc.data();
+            console.log('📊 Profile real-time update received:', data);
+            
             setUserData(data);
+            
+            // Get detective academy data
+            if (data.detectiveAcademy) {
+              setDetectiveData(data.detectiveAcademy);
+            }
+            
+            // Map onboarding answers to form data
+            const onboardingAnswers = data.onboardingAnswers || {};
             setFormData({
               fullName: data.name || '',
               email: user.email || '',
-              ageGroup: data.ageGroup || '30-49 years old',
-              techExperience: data.techExperience || 'Regular User',
-              primaryActivity: data.primaryActivity || 'Online shopping and banking',
-              cybersecurityKnowledge: data.cybersecurityKnowledge || 'Some knowledge'
+              ageGroup: onboardingAnswers.age?.label || '30-49 years old',
+              techExperience: onboardingAnswers.experience?.label || 'Regular User',
+              primaryActivity: onboardingAnswers.activity?.label || 'Online shopping and banking',
+              cybersecurityKnowledge: onboardingAnswers.knowledge?.label || 'Some knowledge'
             });
+            
+            setLoading(false);
+          } else {
+            console.log('❌ User document not found in Profile');
+            setLoading(false);
           }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
+        }, (error) => {
+          console.error('❌ Error in Profile real-time listener:', error);
+          setLoading(false);
+        });
+        
+        // Return cleanup function for both auth and user document listeners
+        return () => {
+          console.log('🔍 Cleaning up Profile real-time listeners');
+          userUnsubscribe();
+        };
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -54,18 +82,62 @@ const Profile = () => {
     if (!user) return;
     
     try {
+      // Update user name
       await updateDoc(doc(firestore, 'users', user.uid), {
-        name: formData.fullName,
-        ageGroup: formData.ageGroup,
-        techExperience: formData.techExperience,
-        primaryActivity: formData.primaryActivity,
-        cybersecurityKnowledge: formData.cybersecurityKnowledge
+        name: formData.fullName
       });
+
+      // Update onboarding answers if they exist
+      if (userData?.onboardingAnswers) {
+        const updatedOnboardingAnswers = { ...userData.onboardingAnswers };
+        
+        // Map form data back to onboarding answers structure
+        if (formData.ageGroup) {
+          updatedOnboardingAnswers.age = {
+            ...updatedOnboardingAnswers.age,
+            label: formData.ageGroup
+          };
+        }
+        
+        if (formData.techExperience) {
+          updatedOnboardingAnswers.experience = {
+            ...updatedOnboardingAnswers.experience,
+            label: formData.techExperience
+          };
+        }
+        
+        if (formData.primaryActivity) {
+          updatedOnboardingAnswers.activity = {
+            ...updatedOnboardingAnswers.activity,
+            label: formData.primaryActivity
+          };
+        }
+        
+        if (formData.cybersecurityKnowledge) {
+          updatedOnboardingAnswers.knowledge = {
+            ...updatedOnboardingAnswers.knowledge,
+            label: formData.cybersecurityKnowledge
+          };
+        }
+        
+        // Update onboarding answers
+        await updateDoc(doc(firestore, 'users', user.uid), {
+          onboardingAnswers: updatedOnboardingAnswers
+        });
+        
+        // Update local state
+        setUserData(prev => ({ 
+          ...prev, 
+          name: formData.fullName,
+          onboardingAnswers: updatedOnboardingAnswers
+        }));
+      }
+      
       setEditing(false);
-      // Update local state
-      setUserData(prev => ({ ...prev, name: formData.fullName }));
+      console.log('Profile updated successfully');
     } catch (error) {
       console.error('Error updating user data:', error);
+      alert('Failed to update profile. Please try again.');
     }
   };
 
@@ -107,20 +179,20 @@ const Profile = () => {
           
           {/* Name and Title */}
           <h1 className="text-2xl font-bold mb-2">{formData.fullName || 'User'}</h1>
-          <p className="text-sm opacity-90">🏆 Junior Detective • Level 3</p>
+          <p className="text-sm opacity-90">🏆 {detectiveData.levelName} • Level {detectiveData.level}</p>
           
           {/* Stats */}
           <div className="flex justify-around mt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold">5</div>
+              <div className="text-2xl font-bold">{detectiveData.missionsCompleted}</div>
               <div className="text-xs opacity-80">Missions Solved</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">350</div>
-              <div className="text-xs opacity-80">Total Points</div>
+              <div className="text-2xl font-bold">{detectiveData.experience}</div>
+              <div className="text-xs opacity-80">Total XP</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">85%</div>
+              <div className="text-2xl font-bold">{detectiveData.successRate}%</div>
               <div className="text-xs opacity-80">Success Rate</div>
             </div>
           </div>
@@ -179,10 +251,11 @@ const Profile = () => {
               disabled={!editing}
               className="w-full h-12 rounded-lg bg-gray-50 px-4 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100"
             >
+              <option value="Under 18">Under 18</option>
               <option value="18-29 years old">18-29 years old</option>
               <option value="30-49 years old">30-49 years old</option>
               <option value="50-64 years old">50-64 years old</option>
-              <option value="65+ years old">65+ years old</option>
+              <option value="Over 65+">Over 65+</option>
             </select>
           </div>
 
@@ -195,10 +268,10 @@ const Profile = () => {
               disabled={!editing}
               className="w-full h-12 rounded-lg bg-gray-50 px-4 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100"
             >
-              <option value="Beginner">Beginner</option>
-              <option value="Regular User">Regular User</option>
-              <option value="Advanced User">Advanced User</option>
-              <option value="Tech Professional">Tech Professional</option>
+              <option value="New to technology">New to technology</option>
+              <option value="Casual user">Casual user</option>
+              <option value="Regular user">Regular user</option>
+              <option value="Expert">Expert</option>
             </select>
           </div>
 
@@ -211,10 +284,10 @@ const Profile = () => {
               disabled={!editing}
               className="w-full h-12 rounded-lg bg-gray-50 px-4 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100"
             >
-              <option value="Social media">Social media</option>
+              <option value="Social media and messaging">Social media and messaging</option>
               <option value="Online shopping and banking">Online shopping and banking</option>
-              <option value="Work and productivity">Work and productivity</option>
-              <option value="Gaming and entertainment">Gaming and entertainment</option>
+              <option value="Work emails and video calls">Work emails and video calls</option>
+              <option value="Basic browsing/entertainment">Basic browsing/entertainment</option>
             </select>
           </div>
 
@@ -227,11 +300,42 @@ const Profile = () => {
               disabled={!editing}
               className="w-full h-12 rounded-lg bg-gray-50 px-4 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100"
             >
-              <option value="No knowledge">No knowledge</option>
+              <option value="Very little">Very little</option>
+              <option value="A little">A little</option>
               <option value="Some knowledge">Some knowledge</option>
-              <option value="Good knowledge">Good knowledge</option>
-              <option value="Expert knowledge">Expert knowledge</option>
+              <option value="A lot">A lot</option>
             </select>
+          </div>
+        </section>
+
+        {/* Detective Academy Progress */}
+        <section className="bg-white rounded-2xl shadow-md p-6">
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Detective Academy Progress</h2>
+          
+          {/* Department Progress */}
+          <div className="space-y-4">
+            {Object.entries(detectiveData.departmentProgress || {}).map(([deptKey, deptData]) => (
+              <div key={deptKey} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-semibold text-gray-800 capitalize">
+                    {deptKey.replace('-', ' ')}
+                  </h3>
+                  <span className="text-sm text-gray-600">
+                    {deptData.missionsSolved}/{deptData.totalMissions} missions
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${deptData.progress}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {deptData.progress}% complete
+                  {!deptData.unlocked && ' • Locked'}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -242,20 +346,21 @@ const Profile = () => {
             <button className="text-sm text-gray-500 hover:text-gray-700">View All</button>
           </div>
           
-          <div className="flex gap-4 overflow-x-auto">
-            <div className="flex-shrink-0 bg-yellow-50 rounded-xl p-4 w-24 text-center">
-              <div className="text-2xl mb-2">💡</div>
-              <div className="text-xs font-semibold">Quick Learner</div>
+          {detectiveData.achievements && detectiveData.achievements.length > 0 ? (
+            <div className="flex gap-4 overflow-x-auto">
+              {detectiveData.achievements.map((achievement, index) => (
+                <div key={index} className="flex-shrink-0 bg-yellow-50 rounded-xl p-4 w-24 text-center">
+                  <div className="text-2xl mb-2">🏆</div>
+                  <div className="text-xs font-semibold">{achievement.name}</div>
+                </div>
+              ))}
             </div>
-            <div className="flex-shrink-0 bg-yellow-50 rounded-xl p-4 w-24 text-center">
-              <div className="text-2xl mb-2">💪</div>
-              <div className="text-xs font-semibold">Strong Defender</div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-2">🎯</div>
+              <p className="text-sm">Complete missions to unlock achievements!</p>
             </div>
-            <div className="flex-shrink-0 bg-yellow-50 rounded-xl p-4 w-24 text-center">
-              <div className="text-2xl mb-2">🛡️</div>
-              <div className="text-xs font-semibold">Shield Master</div>
-            </div>
-          </div>
+          )}
         </section>
 
         {/* Account Settings */}

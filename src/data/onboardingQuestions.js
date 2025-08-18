@@ -3,7 +3,7 @@ import onboard1 from '../assets/alli_question.png';
 export const onboardingQuestions = [
   {
     id: 1,
-    question: "First question - what's your age group? This helps me understand what types of scams you might encounter! 🕵️‍♂️",
+    question: " First question - what's your age group? This helps me understand what types of scams you might encounter! 🕵️‍♂️",
     image: onboard1,
     imageAlt: "Detective Alli",
     options: [
@@ -16,7 +16,7 @@ export const onboardingQuestions = [
   },
   {
     id: 2,
-    question: "Next - How would you describe your online experience?",
+    question: " Next - How would you describe your online experience?",
     image: onboard1,
     imageAlt: "Detective Alli",
     options: [
@@ -28,7 +28,7 @@ export const onboardingQuestions = [
   },
   {
     id: 3,
-    question: "What do you spend most of your time doing online? This helps me prioritize your protection! 🌐",
+    question: " What do you spend most of your time doing online? This helps me prioritize your protection! 🌐",
     image: onboard1,
     imageAlt: "Detective Alli",
     options: [
@@ -40,7 +40,7 @@ export const onboardingQuestions = [
   },
   {
     id: 4,
-    question: "Last question -How much do you know about online scams?",
+    question: " Last question -How much do you know about online scams?",
     image: onboard1,
     imageAlt: "Detective Alli",
     options: [
