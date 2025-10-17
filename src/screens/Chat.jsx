@@ -4,16 +4,17 @@ import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import alliAvatar from '../assets/onboard1.png';
 import { uploadImageToStorage, uploadImageAsBase64, testStorageConnection } from '../utils/storage';
+import { functions } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
 
 
 const openaiService = {
   async sendMessage(messages, imageUrl = null) {
     try {
-      
       const systemMessage = {
         role: "system",
         content: `You are Alli, a helpful AI assistant specializing in cybersecurity and scam detection. 
-        You help users identify scams, analyze suspicious messages, emails, and images for potential threats, and o determine if they are phishing attempts or not.
+        You help users identify scams, analyze suspicious messages, emails, and images for potential threats, and determine if they are phishing attempts or not.
         Be friendly, helpful, and provide clear guidance on staying safe online. 
         Respond concisely, first stating the risk level as one of: "Red flag: Phishing likely" or "No red flags detected, but remain cautious."
         If any known malicious emails or links appear, add that to the summary to let the user know. 
@@ -49,51 +50,32 @@ const openaiService = {
             });
           }
         } else if (msg.sender === 'alli' && msg.text && !msg.text.includes("I'm having trouble")) {
-        chatMessages.push({
-          role: "assistant",
-          content: msg.text
+          chatMessages.push({
+            role: "assistant",
+            content: msg.text
           });
         }
       });
 
-      console.log("Sending messages to OpenAI:", JSON.stringify(chatMessages, null, 2));
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OpenAI API key not found. Please set VITE_OPENAI_API_KEY in your environment variables.');
-      }
-      console.log("API Key (first 10 chars):", apiKey.substring(0, 10));
+      console.log("Calling Cloud Function with messages:", chatMessages.length);
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: chatMessages,
-          max_tokens: 1000,
-          temperature: 0.7
-        })
+      // Cloud Function
+      const chatWithOpenAI = httpsCallable(functions, 'chatWithOpenAI');
+      
+      const result = await chatWithOpenAI({
+        messages: chatMessages,
+        imageUrl: imageUrl,
+        model: "gpt-4o",
+        max_tokens: 1000,
+        temperature: 0.7
       });
 
-      console.log("Response status:", response.status);
-      console.log("Response headers:", response.headers);
+      console.log("Cloud Function response received");
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("OpenAI API error response:", errorText);
-        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-      }
+      return result.data.reply;
 
-      const data = await response.json();
-
-      const reply = data.choices?.[0]?.message?.content?.trim();
-
-
-      return reply;
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error calling Cloud Function:', error);
       throw error;
     }
   }

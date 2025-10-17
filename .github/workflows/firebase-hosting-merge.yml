@@ -21,10 +21,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Build with environment variables
+      - name: Build application
         run: npm run build
-        env:
-          VITE_OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
+      
+      - name: Deploy Firebase Functions
+        run: |
+          cd functions
+          npm install
+          cd ..
+          npx firebase deploy --only functions
+      
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
