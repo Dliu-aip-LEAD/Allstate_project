@@ -5,6 +5,8 @@ import BottomNav from '../components/BottomNav';
 import BackButton from '../components/BackButton';
 import { uploadImageToStorage, uploadImageAsBase64 } from '../utils/storage';
 import Tesseract from 'tesseract.js';
+import { functions } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
 
 
 /*
@@ -126,42 +128,33 @@ const QuickScamScan = () => {
         const base64Image = await fileToBase64(selectedFile);
 
         
-        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${"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"}`
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'user',
-                content: [
-                  {
-                    type: 'image_url',
-                    image_url: {
-                      url: `data:image/jpeg;base64,${base64Image}`
-                    }
-                  },
-                  {
-                    type: 'text',
-                    text: 'Extract emails, URLs, and suspicious content from this image text.'
+        // Call OpenAI using Cloud Function
+        const chatWithOpenAI = httpsCallable(functions, 'chatWithOpenAI');
+        
+        const result = await chatWithOpenAI({
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:image/jpeg;base64,${base64Image}`
                   }
-                ]
-              }
-            ],
-            temperature: 0,
-            max_tokens: 1000
-          })
+                },
+                {
+                  type: 'text',
+                  text: 'Extract emails, URLs, and suspicious content from this image text.'
+                }
+              ]
+            }
+          ],
+          model: 'gpt-4o-mini',
+          temperature: 0,
+          max_tokens: 1000
         });
 
-        if (!openaiResponse.ok) {
-          throw new Error('OpenAI API request failed');
-        }
-
-        const openaiData = await openaiResponse.json();
-        const gptExtractedText = openaiData.choices?.[0]?.message?.content || '';
+        const gptExtractedText = result.data.reply || '';
         setGptText(gptExtractedText);
         const { emails: gptEmails, urls: gptUrls } = extractPatterns(gptExtractedText);
         const emailsMatch = JSON.stringify(ocrEmails.sort()) === JSON.stringify(gptEmails.sort());
