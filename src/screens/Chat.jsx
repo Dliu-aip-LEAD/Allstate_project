@@ -57,9 +57,9 @@ const openaiService = {
       });
 
       console.log("Sending messages to OpenAI:", JSON.stringify(chatMessages, null, 2));
-      const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
       if (!apiKey) {
-        throw new Error('OpenAI API key not found. Please set REACT_APP_OPENAI_API_KEY in your environment variables.');
+        throw new Error('OpenAI API key not found. Please set VITE_OPENAI_API_KEY in your environment variables.');
       }
       console.log("API Key (first 10 chars):", apiKey.substring(0, 10));
 
