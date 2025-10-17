@@ -130,7 +130,7 @@ const QuickScamScan = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${"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"}`
+            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
           },
           body: JSON.stringify({
             model: 'gpt-4o-mini',
