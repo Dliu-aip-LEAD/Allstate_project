@@ -24,12 +24,13 @@ jobs:
       - name: Build application
         run: npm run build
       
-      - name: Deploy Firebase Functions
-        run: |
-          cd functions
-          npm install
-          cd ..
-          npx firebase deploy --only functions
+      # Already manually deploy functions
+      # - name: Deploy Firebase Functions
+      #   run: |
+      #     cd functions
+      #     npm install
+      #     cd ..
+      #     npx firebase deploy --only functions
       
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
