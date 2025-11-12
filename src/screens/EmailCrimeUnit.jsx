@@ -229,8 +229,9 @@ const EmailCrimeUnit = () => {
 
   const handleMissionClick = (mission) => {
     if (mission.status === 'completed') {
-      console.log('Mission completed - show replay option');
-      // TODO: Implement replay functionality
+      console.log('Mission completed - allowing replay');
+      // Allow replaying completed missions
+      navigate(`/mission/${mission.id}/introduction`);
     } else if (mission.status === 'available' || mission.status === 'in-progress') {
       console.log('Starting mission:', mission.title);
       navigate(`/mission/${mission.id}/introduction`);

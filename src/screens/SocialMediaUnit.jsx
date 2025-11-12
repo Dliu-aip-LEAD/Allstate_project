@@ -13,6 +13,7 @@ const SocialMediaUnit = () => {
   console.log('SocialMediaUnit component rendered');
   const navigate = useNavigate();
   const [detectiveData, setDetectiveData] = useState(defaultDetectiveAcademy);
+  const [missionHistory, setMissionHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Get user info from Firebase Auth
@@ -46,18 +47,23 @@ const SocialMediaUnit = () => {
         if (doc.exists()) {
           const userData = doc.data();
           const progress = userData.detectiveAcademy || defaultDetectiveAcademy;
+          const history = userData.missionHistory || [];
           
           console.log('📊 SocialMediaUnit real-time update received:', progress);
+          console.log('📋 Mission history:', history);
           setDetectiveData(progress);
+          setMissionHistory(history);
           setLoading(false);
         } else {
           console.log('❌ User document not found in SocialMediaUnit');
           setDetectiveData(defaultDetectiveAcademy);
+          setMissionHistory([]);
           setLoading(false);
         }
       }, (error) => {
         console.error('❌ Error in SocialMediaUnit real-time listener:', error);
         setDetectiveData(defaultDetectiveAcademy);
+        setMissionHistory([]);
         setLoading(false);
       });
       
@@ -69,6 +75,7 @@ const SocialMediaUnit = () => {
     } else {
       // Fallback to default data if no user ID
       setDetectiveData(defaultDetectiveAcademy);
+      setMissionHistory([]);
       setLoading(false);
     }
   }, [userId]);
@@ -153,7 +160,6 @@ const SocialMediaUnit = () => {
   // Get mission status
   const getMissionStatus = (missionId) => {
     // Check if mission is completed using missionHistory
-    const missionHistory = detectiveData.missionHistory || [];
     const completedMission = missionHistory.find(m => m.missionId === missionId);
     if (completedMission) {
       return 'completed';
@@ -229,8 +235,9 @@ const SocialMediaUnit = () => {
 
   const handleMissionClick = (mission) => {
     if (mission.status === 'completed') {
-      console.log('Mission completed - show replay option');
-      // TODO: Implement replay functionality
+      console.log('Mission completed - allowing replay');
+      // Allow replaying completed missions
+      navigate(`/mission/${mission.id}/introduction`);
     } else if (mission.status === 'available' || mission.status === 'in-progress') {
       console.log('Starting mission:', mission.title);
       navigate(`/mission/${mission.id}/introduction`);

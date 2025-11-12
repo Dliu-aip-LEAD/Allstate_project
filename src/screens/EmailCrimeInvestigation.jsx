@@ -260,8 +260,18 @@ const EmailCrimeInvestigation = () => {
       setTotalQuestions(totalSteps);
       setLoading(false);
     } else {
-      // Mission not found
-      navigate('/training/email-crimes');
+      // Mission not found - try to get department from URL or default to email-crimes
+      const currentPath = window.location.pathname;
+      const pathParts = currentPath.split('/');
+      const missionIdFromPath = pathParts[2]; // /mission/:missionId/investigation
+      
+      // Try to get department from mission data if available
+      let department = 'email-crimes';
+      if (missionIdFromPath && missions[missionIdFromPath]) {
+        department = missions[missionIdFromPath].department || 'email-crimes';
+      }
+      
+      navigate(`/training/${department}`);
     }
     
     // Add hotspot styles to document
@@ -982,7 +992,17 @@ const EmailCrimeInvestigation = () => {
           <div className="text-center text-white">
             <p className="text-xl mb-4">Mission not found</p>
             <button
-              onClick={() => navigate('/training/email-crimes')}
+              onClick={() => {
+                // Try to get department from mission data or default to email-crimes
+                const currentPath = window.location.pathname;
+                const pathParts = currentPath.split('/');
+                const missionIdFromPath = pathParts[2];
+                let department = 'email-crimes';
+                if (missionIdFromPath && missions[missionIdFromPath]) {
+                  department = missions[missionIdFromPath].department || 'email-crimes';
+                }
+                navigate(`/training/${department}`);
+              }}
               className="bg-blue-500 text-white px-4 py-2 rounded"
             >
               Return to Academy
