@@ -14,6 +14,7 @@ import Profile from './screens/Profile';
 import Play from './screens/Play';
 import Chat from './screens/Chat';
 import EmailCrimeUnit from './screens/EmailCrimeUnit';
+import SocialMediaUnit from './screens/SocialMediaUnit';
 import MissionIntroduction from './screens/MissionIntroduction';
 import EmailCrimeInvestigation from './screens/EmailCrimeInvestigation';
 import MissionComplete from './screens/MissionComplete';
@@ -38,6 +39,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/play" element={<Play />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/training/email-crimes" element={<EmailCrimeUnit />} />
+        <Route path="/training/social-media" element={<SocialMediaUnit />} />
         <Route path="/mission/:missionId/introduction" element={<MissionIntroduction />} />
         <Route path="/mission/:missionId/investigation" element={<EmailCrimeInvestigation />} />
         <Route path="/mission/:missionId/complete" element={<MissionComplete />} />

@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 import BackButton from '../components/BackButton';
 import MissionCard from '../components/MissionCard';
 import { missions } from '../data/missions';
-import { getUserProgress, defaultDetectiveAcademy } from '../utils/userProgress';
+import { defaultDetectiveAcademy } from '../utils/userProgress';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { firestore, auth } from '../firebase';
 
-const EmailCrimeUnit = () => {
-  console.log('EmailCrimeUnit component rendered');
+const SocialMediaUnit = () => {
+  console.log('SocialMediaUnit component rendered');
   const navigate = useNavigate();
-  const location = useLocation();
   const [detectiveData, setDetectiveData] = useState(defaultDetectiveAcademy);
+  const [missionHistory, setMissionHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Get user info from Firebase Auth
@@ -23,10 +23,10 @@ const EmailCrimeUnit = () => {
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged((user) => {
       if (user) {
-        console.log('🔐 EmailCrimeUnit: User authenticated:', user.uid);
+        console.log('🔐 SocialMediaUnit: User authenticated:', user.uid);
         setUserId(user.uid);
       } else {
-        console.log('🔐 EmailCrimeUnit: User not authenticated');
+        console.log('🔐 SocialMediaUnit: User not authenticated');
         setUserId('anonymous');
         setDetectiveData(defaultDetectiveAcademy);
         setLoading(false);
@@ -39,7 +39,7 @@ const EmailCrimeUnit = () => {
   // Load user progress data with real-time updates
   useEffect(() => {
     if (userId && userId !== 'anonymous') {
-      console.log('🔍 Setting up real-time listener for EmailCrimeUnit user:', userId);
+      console.log('🔍 Setting up real-time listener for SocialMediaUnit user:', userId);
       
       // Set up real-time listener for user document
       const userRef = doc(firestore, 'users', userId);
@@ -47,46 +47,52 @@ const EmailCrimeUnit = () => {
         if (doc.exists()) {
           const userData = doc.data();
           const progress = userData.detectiveAcademy || defaultDetectiveAcademy;
+          const history = userData.missionHistory || [];
           
-          console.log('📊 EmailCrimeUnit real-time update received:', progress);
+          console.log('📊 SocialMediaUnit real-time update received:', progress);
+          console.log('📋 Mission history:', history);
           setDetectiveData(progress);
+          setMissionHistory(history);
           setLoading(false);
         } else {
-          console.log('❌ User document not found in EmailCrimeUnit');
+          console.log('❌ User document not found in SocialMediaUnit');
           setDetectiveData(defaultDetectiveAcademy);
+          setMissionHistory([]);
           setLoading(false);
         }
       }, (error) => {
-        console.error('❌ Error in EmailCrimeUnit real-time listener:', error);
+        console.error('❌ Error in SocialMediaUnit real-time listener:', error);
         setDetectiveData(defaultDetectiveAcademy);
+        setMissionHistory([]);
         setLoading(false);
       });
       
       // Cleanup function to unsubscribe when component unmounts
       return () => {
-        console.log('🔍 Cleaning up EmailCrimeUnit real-time listener');
+        console.log('🔍 Cleaning up SocialMediaUnit real-time listener');
         unsubscribe();
       };
     } else {
       // Fallback to default data if no user ID
       setDetectiveData(defaultDetectiveAcademy);
+      setMissionHistory([]);
       setLoading(false);
     }
   }, [userId]);
 
   // Generate missions based on user progress and unlock requirements
   const generateMissions = () => {
-    const emailCrimesMissions = [
-      'know-the-lingo',
-      'spot-red-flags',
-      'email-imposter',
-      'spear-phishing',
-      'fake-account',
-      'wire-transfer',
+    const socialMediaMissions = [
+      'social-media-basics',
+      'spot-fake-profile',
+      'fake-giveaway-detector',
+      'spear-phishing-campaign',
+      'fake-account-notification',
+      'wire-transfer-trap',
       'perfect-impersonation'
     ];
 
-    return emailCrimesMissions.map(missionId => {
+    return socialMediaMissions.map(missionId => {
       const mission = missions[missionId];
       if (!mission) return null;
 
@@ -107,8 +113,8 @@ const EmailCrimeUnit = () => {
         icon: getMissionIcon(missionId),
         difficulty: mission.difficulty,
         estimatedTime: mission.estimatedTime,
-        maxScore: mission.scoring.maxScore, 
-        XPReward: mission.scoring.xpReward,
+        maxScore: mission.scoring?.maxScore || 100, 
+        XPReward: mission.scoring?.xpReward || 50,
         unlocked: isUnlocked,
         unlockRequirement: unlockRequirement
       };
@@ -120,7 +126,7 @@ const EmailCrimeUnit = () => {
     const mission = missions[missionId];
     if (!mission) return false;
 
-    const requirements = mission.unlockRequirements;
+    const requirements = mission.unlockRequirements || {};
     
     // Check level requirement
     if (detectiveData.level < (requirements.minimumLevel || 1)) {
@@ -142,7 +148,7 @@ const EmailCrimeUnit = () => {
     
     // Check minimum score requirement
     if (requirements.minimumScore > 0) {
-      const userScore = detectiveData.departmentProgress?.['email-crimes']?.score || 0;
+      const userScore = detectiveData.departmentProgress?.['social-media']?.score || 0;
       if (userScore < requirements.minimumScore) {
         return false;
       }
@@ -154,7 +160,6 @@ const EmailCrimeUnit = () => {
   // Get mission status
   const getMissionStatus = (missionId) => {
     // Check if mission is completed using missionHistory
-    const missionHistory = detectiveData.missionHistory || [];
     const completedMission = missionHistory.find(m => m.missionId === missionId);
     if (completedMission) {
       return 'completed';
@@ -176,20 +181,21 @@ const EmailCrimeUnit = () => {
   // Get unlock requirement text for locked missions
   const getUnlockRequirementText = (mission) => {
     const requirements = [];
+    const req = mission.unlockRequirements || {};
     
-    if (detectiveData.level < (mission.unlockRequirements.minimumLevel || 1)) {
-      requirements.push(`Level ${mission.unlockRequirements.minimumLevel || 1}`);
+    if (detectiveData.level < (req.minimumLevel || 1)) {
+      requirements.push(`Level ${req.minimumLevel || 1}`);
     }
     
-    if (mission.unlockRequirements.previousMissions && mission.unlockRequirements.previousMissions.length > 0) {
-      const prevMissionNames = mission.unlockRequirements.previousMissions
+    if (req.previousMissions && req.previousMissions.length > 0) {
+      const prevMissionNames = req.previousMissions
         .map(id => missions[id]?.title || id)
         .join(', ');
       requirements.push(`Complete: ${prevMissionNames}`);
     }
     
-    if (mission.unlockRequirements.minimumScore > 0) {
-      requirements.push(`Score: ${mission.unlockRequirements.minimumScore}`);
+    if (req.minimumScore > 0) {
+      requirements.push(`Score: ${req.minimumScore}`);
     }
     
     return requirements.join(' + ');
@@ -198,12 +204,12 @@ const EmailCrimeUnit = () => {
   // Get mission icon based on mission ID
   const getMissionIcon = (missionId) => {
     const iconMap = {
-      'know-the-lingo': '📚',
-      'spot-red-flags': '🔍',
-      'email-imposter': '🏢',
-      'spear-phishing': '🎣',
-      'fake-account': '🏪',
-      'wire-transfer': '💸',
+      'social-media-basics': '📚',
+      'spot-fake-profile': '🔍',
+      'fake-giveaway-detector': '🎁',
+      'spear-phishing-campaign': '🎣',
+      'fake-account-notification': '📧',
+      'wire-transfer-trap': '💸',
       'perfect-impersonation': '🎭'
     };
     return iconMap[missionId] || '📋';
@@ -245,17 +251,17 @@ const EmailCrimeUnit = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-800 to-slate-700 w-full">
-        <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-6 pt-20 w-full">
+        <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-4 py-6 pt-20 w-full">
           <div className="w-full px-4">
             <div className="flex items-center gap-2 text-white text-sm opacity-80 mb-4">
               <span>Detective Academy</span>
               <span>›</span>
-              <span>Email Crimes Unit</span>
+              <span>Social Media Unit</span>
             </div>
             
-            <h1 className="text-white text-3xl font-bold mb-2">Email Crime Unit</h1>
+            <h1 className="text-white text-3xl font-bold mb-2">Social Media Unit</h1>
             <p className="text-white text-base opacity-90">
-              Specializing in phishing, impersonation, and email-based fraud detection
+              Combat fake profiles, romance scams, and social engineering
             </p>
           </div>
         </div>
@@ -275,23 +281,23 @@ const EmailCrimeUnit = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-800 to-slate-700 w-full">
-      {/* Header*/}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-6 pt-20 w-full">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-4 py-6 pt-20 w-full">
         <div className="w-full px-4">
           <div className="flex items-center gap-2 text-white text-sm opacity-80 mb-4">
             <span>Detective Academy</span>
             <span>›</span>
-            <span>Email Crimes Unit</span>
+            <span>Social Media Unit</span>
           </div>
           
-          <h1 className="text-white text-3xl font-bold mb-2">Email Crime Unit</h1>
+          <h1 className="text-white text-3xl font-bold mb-2">Social Media Unit</h1>
           <p className="text-white text-base opacity-90">
-            Specializing in phishing, impersonation, and email-based fraud detection
+            Combat fake profiles, romance scams, and social engineering
           </p>
         </div>
       </div>
 
-      {/* Main Content - 移除最大宽度限制 */}
+      {/* Main Content */}
       <main className="flex-1 px-4 py-6 space-y-6 pb-24 w-full">
         {/* Back Button */}
         <div className="w-full">
@@ -309,28 +315,6 @@ const EmailCrimeUnit = () => {
               
               <div className="space-y-4">
                 {groupedMissions.beginner.map((mission) => (
-                  <MissionCard
-                    key={mission.id}
-                    mission={mission}
-                    onClick={handleMissionClick}
-                  />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Intermediate Training Section */}
-        {groupedMissions.intermediate.length > 0 && (
-          <section className="w-full">
-            <div className="p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                <h2 className="text-yellow-500 font-bold text-lg">Intermediate Training</h2>
-              </div>
-              
-              <div className="space-y-4">
-                {groupedMissions.intermediate.map((mission) => (
                   <MissionCard
                     key={mission.id}
                     mission={mission}
@@ -393,4 +377,5 @@ const EmailCrimeUnit = () => {
   );
 };
 
-export default EmailCrimeUnit;
+export default SocialMediaUnit;
+

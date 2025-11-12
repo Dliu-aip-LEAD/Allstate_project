@@ -1143,6 +1143,447 @@ CONFIDENTIAL: This email contains privileged and confidential information intend
     }
   },
 
+  // **************************************************
+  //                SOCIAL MEDIA MISSIONS
+  // **************************************************
+  // ===== BEGINNER MISSIONS =====
+  
+  'social-media-basics': {
+    id: 'social-media-basics',
+    title: 'Social Media Basics',
+    description: 'Learn about common social media scams and red flags to watch for',
+    department: 'social-media',
+    difficulty: 'beginner',
+    requiredLevel: 1,
+    estimatedTime: 10,
+    
+    content: {
+      type: 'terminology',
+      scenario: 'Welcome to the Social Media Division! Learn the fundamentals of social media security and common scam patterns.',
+      
+      clues: {
+        fakeProfile: {
+          title: "Fake Profiles",
+          description: "Scammers create fake accounts using stolen photos and false information to build trust with victims.",
+          redFlag: "Accounts with few friends, new profiles, or suspicious photos"
+        },
+        romanceScam: {
+          title: "Romance Scams",
+          description: "Scammers build romantic relationships online to eventually request money or personal information.",
+          redFlag: "Quick declarations of love, requests for money, or refusal to video chat"
+        },
+        socialEngineering: {
+          title: "Social Engineering",
+          description: "Manipulating people into revealing confidential information or performing actions.",
+          redFlag: "Pressure tactics, urgency, or requests for sensitive information"
+        }
+      },
+      
+      quizzes: {
+        fakeProfile: {
+          text: "📱 What are common signs of a fake social media profile?",
+          options: [
+            { text: "Many friends and long history", correct: false },
+            { text: "Few friends, new account, stolen photos", correct: true },
+            { text: "Regular posting schedule", correct: false },
+            { text: "Verified account badge", correct: false }
+          ],
+          feedback: "Correct! Fake profiles often have few connections, are newly created, and use stolen photos."
+        },
+        romanceScam: {
+          text: "💔 What is a red flag in a romance scam?",
+          options: [
+            { text: "Asking to meet in person", correct: false },
+            { text: "Quickly declaring love and asking for money", correct: true },
+            { text: "Sharing photos", correct: false },
+            { text: "Having mutual friends", correct: false }
+          ],
+          feedback: "Exactly! Romance scammers move fast, declare love quickly, and eventually ask for money."
+        }
+      }
+    },
+    
+    scoring: {
+      maxScore: 100,
+      scorePerFlag: 20,
+      scorePerQuiz: 30,
+      bonusPoints: 10,
+      xpReward: 50
+    },
+    
+    unlockRequirements: {
+      minimumLevel: 1
+    }
+  },
+
+  'spot-fake-profile': {
+    id: 'spot-fake-profile',
+    title: 'Spot the Fake Profile',
+    description: 'Identify suspicious elements in fake social media profiles',
+    department: 'social-media',
+    difficulty: 'beginner',
+    requiredLevel: 1,
+    estimatedTime: 12,
+    
+    content: {
+      type: 'profile',
+      scenario: 'A friend asks you to review a profile that contacted them. Can you identify the red flags that indicate this is a fake account?',
+      
+      clues: {
+        newAccount: {
+          title: "New Account",
+          description: "The account was created very recently, which is suspicious for someone claiming to be established.",
+          redFlag: "Account created within the last few days or weeks"
+        },
+        fewConnections: {
+          title: "Few Connections",
+          description: "Legitimate users typically have more friends and connections over time.",
+          redFlag: "Very few friends or followers"
+        },
+        stolenPhotos: {
+          title: "Stolen Photos",
+          description: "Reverse image search reveals these photos belong to someone else.",
+          redFlag: "Photos appear on multiple unrelated accounts"
+        },
+        genericContent: {
+          title: "Generic Content",
+          description: "Posts are generic, reposted, or don't show personal experiences.",
+          redFlag: "Lack of personal, original content"
+        }
+      },
+      
+      quizzes: {
+        newAccount: {
+          text: "🔍 Why is a newly created account suspicious?",
+          options: [
+            { text: "Everyone starts with a new account", correct: false },
+            { text: "Scammers often create new accounts to avoid detection", correct: true },
+            { text: "New accounts are always fake", correct: false },
+            { text: "It's normal for established users", correct: false }
+          ],
+          feedback: "Correct! Scammers create new accounts to avoid being flagged by previous victims."
+        }
+      }
+    },
+    
+    scoring: {
+      maxScore: 100,
+      scorePerFlag: 20,
+      scorePerQuiz: 30,
+      bonusPoints: 10,
+      xpReward: 60
+    },
+    
+    unlockRequirements: {
+      minimumLevel: 1,
+      previousMissions: ['social-media-basics']
+    }
+  },
+
+  'fake-giveaway-detector': {
+    id: 'fake-giveaway-detector',
+    title: 'Fake Giveaway Detector',
+    description: 'Analyze three social media posts and determine which are legitimate and which are scams',
+    department: 'social-media',
+    difficulty: 'beginner',
+    requiredLevel: 1,
+    estimatedTime: 15,
+    
+    content: {
+      type: 'posts',
+      scenario: 'You see multiple giveaway posts on social media. Some are legitimate promotions, others are scams. Can you tell the difference?',
+      
+      clues: {
+        tooGoodToBeTrue: {
+          title: "Too Good to Be True",
+          description: "Offers that seem unrealistically generous are usually scams.",
+          redFlag: "Extremely high-value prizes with easy entry requirements"
+        },
+        requiresPayment: {
+          title: "Requires Payment",
+          description: "Legitimate giveaways don't require you to pay to enter.",
+          redFlag: "Asking for payment, fees, or shipping costs upfront"
+        },
+        fakeVerified: {
+          title: "Fake Verified Badge",
+          description: "Scammers create accounts that look verified but aren't official.",
+          redFlag: "Account mimics official brand but isn't verified"
+        },
+        urgentDeadline: {
+          title: "Urgent Deadline",
+          description: "Creating false urgency to prevent you from thinking clearly.",
+          redFlag: "Extremely short deadlines or limited-time pressure"
+        }
+      },
+      
+      quizzes: {
+        tooGoodToBeTrue: {
+          text: "🎁 What makes a giveaway suspicious?",
+          options: [
+            { text: "High-value prizes", correct: false },
+            { text: "Unrealistic prizes with easy entry", correct: true },
+            { text: "Requiring social media shares", correct: false },
+            { text: "Having official branding", correct: false }
+          ],
+          feedback: "Exactly! Scams often offer unrealistic prizes with suspiciously easy entry requirements."
+        }
+      }
+    },
+    
+    scoring: {
+      maxScore: 100,
+      scorePerFlag: 20,
+      scorePerQuiz: 30,
+      bonusPoints: 10,
+      xpReward: 70
+    },
+    
+    unlockRequirements: {
+      minimumLevel: 1,
+      previousMissions: ['spot-fake-profile']
+    }
+  },
+
+  // ===== ADVANCED MISSIONS =====
+  
+  'spear-phishing-campaign': {
+    id: 'spear-phishing-campaign',
+    title: 'The Spear Phishing Campaign',
+    description: 'Analyze a targeted attack using personal information to gain credibility',
+    department: 'social-media',
+    difficulty: 'advanced',
+    requiredLevel: 2,
+    estimatedTime: 20,
+    
+    content: {
+      type: 'message',
+      scenario: 'You receive a message from someone who knows personal details about you. Is this a legitimate contact or a sophisticated spear phishing attempt?',
+      
+      clues: {
+        personalInfo: {
+          title: "Personal Information Used",
+          description: "Scammers gather public information from your social media to appear legitimate.",
+          redFlag: "Mentioning specific personal details you've shared publicly"
+        },
+        urgentRequest: {
+          title: "Urgent Request",
+          description: "Creating urgency to bypass your normal security checks.",
+          redFlag: "Pressure to act immediately without verification"
+        },
+        suspiciousLink: {
+          title: "Suspicious Link",
+          description: "Links that don't match the claimed sender or service.",
+          redFlag: "URLs that don't match official domains"
+        }
+      },
+      
+      quizzes: {
+        personalInfo: {
+          text: "🎣 How do spear phishers gain credibility?",
+          options: [
+            { text: "Using official email addresses", correct: false },
+            { text: "Using personal information from your public profiles", correct: true },
+            { text: "Sending from verified accounts", correct: false },
+            { text: "Using professional language", correct: false }
+          ],
+          feedback: "Correct! Spear phishers research their targets using public social media information."
+        }
+      }
+    },
+    
+    scoring: {
+      maxScore: 150,
+      scorePerFlag: 30,
+      scorePerQuiz: 40,
+      bonusPoints: 20,
+      xpReward: 100
+    },
+    
+    unlockRequirements: {
+      minimumLevel: 2,
+      previousMissions: ['fake-giveaway-detector']
+    }
+  },
+
+  'fake-account-notification': {
+    id: 'fake-account-notification',
+    title: 'Fake Account Notification',
+    description: 'Investigate emails claiming account suspension that steal login credentials',
+    department: 'social-media',
+    difficulty: 'advanced',
+    requiredLevel: 2,
+    estimatedTime: 18,
+    
+    content: {
+      type: 'email',
+      scenario: 'You receive an email claiming your social media account will be suspended. Is this legitimate or a phishing attempt?',
+      
+      clues: {
+        fakeSender: {
+          title: "Fake Sender Address",
+          description: "The email comes from a domain that doesn't match the official service.",
+          redFlag: "Sender domain doesn't match official company domain"
+        },
+        loginRequest: {
+          title: "Requests Login",
+          description: "Legitimate services rarely ask you to log in via email links.",
+          redFlag: "Asking you to click a link and enter credentials"
+        },
+        urgency: {
+          title: "False Urgency",
+          description: "Creating panic to make you act without thinking.",
+          redFlag: "Threats of immediate account closure"
+        }
+      },
+      
+      quizzes: {
+        fakeSender: {
+          text: "📧 What should you check in a suspicious email?",
+          options: [
+            { text: "The email subject", correct: false },
+            { text: "The sender's email address domain", correct: true },
+            { text: "The email formatting", correct: false },
+            { text: "The email length", correct: false }
+          ],
+          feedback: "Exactly! Always verify the sender's domain matches the official company."
+        }
+      }
+    },
+    
+    scoring: {
+      maxScore: 150,
+      scorePerFlag: 30,
+      scorePerQuiz: 40,
+      bonusPoints: 20,
+      xpReward: 100
+    },
+    
+    unlockRequirements: {
+      minimumLevel: 2,
+      previousMissions: ['spear-phishing-campaign']
+    }
+  },
+
+  'wire-transfer-trap': {
+    id: 'wire-transfer-trap',
+    title: 'The Wire Transfer Trap',
+    description: 'Complex business email compromise with multiple layers of deception',
+    department: 'social-media',
+    difficulty: 'advanced',
+    requiredLevel: 2,
+    estimatedTime: 25,
+    
+    content: {
+      type: 'scenario',
+      scenario: 'A sophisticated scam combines social media research with email impersonation to trick you into a wire transfer. Can you identify all the deception layers?',
+      
+      clues: {
+        socialResearch: {
+          title: "Social Media Research",
+          description: "Scammers researched your connections and business relationships online.",
+          redFlag: "Mentioning specific business contacts or relationships"
+        },
+        impersonation: {
+          title: "Executive Impersonation",
+          description: "Pretending to be a trusted authority figure to authorize transactions.",
+          redFlag: "Urgent requests from executives via email"
+        },
+        wireTransfer: {
+          title: "Wire Transfer Request",
+          description: "Legitimate businesses have proper procedures, not urgent email requests.",
+          redFlag: "Requesting immediate wire transfers via email"
+        }
+      },
+      
+      quizzes: {
+        socialResearch: {
+          text: "💸 How do scammers make wire transfer scams convincing?",
+          options: [
+            { text: "Using official letterhead", correct: false },
+            { text: "Researching your business relationships on social media", correct: true },
+            { text: "Sending from company domains", correct: false },
+            { text: "Using professional language", correct: false }
+          ],
+          feedback: "Correct! They research your connections to make their impersonation more believable."
+        }
+      }
+    },
+    
+    scoring: {
+      maxScore: 150,
+      scorePerFlag: 30,
+      scorePerQuiz: 40,
+      bonusPoints: 20,
+      xpReward: 120
+    },
+    
+    unlockRequirements: {
+      minimumLevel: 2,
+      previousMissions: ['fake-account-notification']
+    }
+  },
+
+  // ===== EXPERT MISSIONS =====
+  
+  'perfect-impersonation': {
+    id: 'perfect-impersonation',
+    title: 'The Perfect Impersonation',
+    description: 'Account Notification impersonation login credentials',
+    department: 'social-media',
+    difficulty: 'expert',
+    requiredLevel: 3,
+    estimatedTime: 30,
+    
+    content: {
+      type: 'complex',
+      scenario: 'A nearly perfect impersonation attack combines multiple techniques. Every detail seems legitimate. Can you find the subtle flaws?',
+      
+      clues: {
+        perfectTiming: {
+          title: "Perfect Timing",
+          description: "The attack happens at a time when you'd expect such communication.",
+          redFlag: "Coincidental timing that seems too perfect"
+        },
+        subtleDomain: {
+          title: "Subtle Domain Variation",
+          description: "The domain is almost identical to the real one, with a tiny difference.",
+          redFlag: "Domain with subtle character substitution (e.g., rn vs m)"
+        },
+        multiChannel: {
+          title: "Multi-Channel Attack",
+          description: "Uses multiple communication channels to build credibility.",
+          redFlag: "Coordinated messages across email, social media, and text"
+        }
+      },
+      
+      quizzes: {
+        subtleDomain: {
+          text: "🎭 What makes an impersonation 'perfect'?",
+          options: [
+            { text: "Using exact official branding", correct: false },
+            { text: "Combining subtle domain tricks with social engineering", correct: true },
+            { text: "Sending from verified accounts", correct: false },
+            { text: "Using professional templates", correct: false }
+          ],
+          feedback: "Exactly! Perfect impersonations combine technical tricks with psychological manipulation."
+        }
+      }
+    },
+    
+    scoring: {
+      maxScore: 200,
+      scorePerFlag: 40,
+      scorePerQuiz: 50,
+      bonusPoints: 30,
+      xpReward: 150
+    },
+    
+    unlockRequirements: {
+      minimumLevel: 3,
+      previousMissions: ['wire-transfer-trap']
+    }
+  },
+
   
 
 };
@@ -1192,7 +1633,15 @@ export const departments = {
       minimumMissionsCompleted: 0
     },
     
-    missions: ['social-media-scam'],
+    missions: [
+      'social-media-basics',
+      'spot-fake-profile',
+      'fake-giveaway-detector',
+      'spear-phishing-campaign',
+      'fake-account-notification',
+      'wire-transfer-trap',
+      'perfect-impersonation'
+    ],
     
     rewards: {
       experiencePoints: 75,

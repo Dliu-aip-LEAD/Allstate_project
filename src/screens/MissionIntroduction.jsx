@@ -123,7 +123,13 @@ const MissionIntroduction = () => {
   };
 
   const handleGoBackToAcademy = () => {
-    navigate('/training/email-crimes');
+    // Navigate back to the appropriate department based on mission
+    if (mission && mission.department) {
+      navigate(`/training/${mission.department}`);
+    } else {
+      // Fallback to email-crimes if department is not specified
+      navigate('/training/email-crimes');
+    }
   };
 
   if (loading) {
@@ -146,7 +152,7 @@ const MissionIntroduction = () => {
           <div className="text-center text-white">
             <p className="text-xl mb-4">Mission not found</p>
             <button
-              onClick={() => navigate('/training/email-crimes')}
+              onClick={handleGoBackToAcademy}
               className="bg-blue-500 text-white px-4 py-2 rounded"
             >
               Return to Academy
@@ -187,9 +193,9 @@ const MissionIntroduction = () => {
       <div className="bg-black bg-opacity-30 backdrop-blur-md border-b border-white border-opacity-10 px-4 py-4 pt-20">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3">
-            <BackButton onClick={() => navigate('/training/email-crimes')} />
+            <BackButton onClick={handleGoBackToAcademy} />
             <div className="text-white text-sm opacity-70">
-              Email Crimes Unit • Mission Introduction
+              {mission?.department === 'social-media' ? 'Social Media Unit' : 'Email Crimes Unit'} • Mission Introduction
             </div>
           </div>
         </div>
