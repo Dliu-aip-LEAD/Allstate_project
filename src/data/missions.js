@@ -1281,66 +1281,369 @@ CONFIDENTIAL: This email contains privileged and confidential information intend
   },
 
   'fake-giveaway-detector': {
+    // Basic Mission Information
     id: 'fake-giveaway-detector',
     title: 'Fake Giveaway Detector',
-    description: 'Analyze three social media posts and determine which are legitimate and which are scams',
+    description: 'Analyze social media posts to distinguish legitimate giveaways from scam attempts',
     department: 'social-media',
     difficulty: 'beginner',
-    requiredLevel: 1,
-    estimatedTime: 15,
+    requiredLevel: 2,
+    estimatedTime: 12,
     
+    // Mission Content
     content: {
-      type: 'posts',
-      scenario: 'You see multiple giveaway posts on social media. Some are legitimate promotions, others are scams. Can you tell the difference?',
+      type: 'social-media-posts',
+      scenario: 'Detective, fake giveaways are everywhere on social media! Scammers use them to steal personal information, spread malware, or trick people into sending money. Your mission: analyze these social media posts and determine which are legitimate and which are scams. Look for red flags like suspicious URLs, requests for payment, and unrealistic prizes!',
       
-      clues: {
-        tooGoodToBeTrue: {
-          title: "Too Good to Be True",
-          description: "Offers that seem unrealistically generous are usually scams.",
-          redFlag: "Extremely high-value prizes with easy entry requirements"
+      // Array of social media posts to analyze
+      posts: [
+        {
+          // Post 1: SCAM - Fake iPhone Giveaway
+          postId: 'post-1',
+          postType: 'scam',
+          
+          // Post Header Information
+          header: {
+            username: 'Apple Giveaways',
+            handle: '@AppleGiveaways_Official',
+            avatar: '📱',
+            verified: false, // fake verification
+            verifiedBadge: '✓', // emoji badge (fake)
+            timestamp: '2 hours ago'
+          },
+          
+          // Post Content
+          content: {
+            text: `🎉 **FREE iPhone 15 Pro MAX GIVEAWAY!** 🎉
+  
+  We're giving away 100 NEW iPhone 15 Pro to celebrate reaching 50K followers! 🎊
+  
+  **TO ENTER:**
+  1. Follow @AppleGiveaways_Official
+  2. Like & Share this post
+  3. Tag 10 friends in comments
+  4. Click link to verify: bit.ly/free-iphone-claim
+  5. Pay $9.99 shipping fee to claim
+  
+  ⏰ ONLY 24 HOURS LEFT! Winners announced tomorrow!
+  
+  ⚠️ Must complete ALL steps or you won't be entered!`,
+            
+            // Highlighted suspicious elements
+            highlightedElements: [
+              {
+                text: '100 NEW iPhone 15 Pro',
+                flagType: 'unrealisticPrize',
+                tooltip: 'Click to flag: Unrealistic prize quantity'
+              },
+              {
+                text: 'bit.ly/free-iphone-claim',
+                flagType: 'suspiciousUrl',
+                tooltip: 'Click to flag: Shortened URL'
+              },
+              {
+                text: 'Pay $9.99 shipping fee',
+                flagType: 'paymentRequest',
+                tooltip: 'Click to flag: Payment required'
+              },
+              {
+                text: 'ONLY 24 HOURS LEFT!',
+                flagType: 'artificialUrgency',
+                tooltip: 'Click to flag: Artificial urgency'
+              },
+              {
+                text: '✓',
+                flagType: 'fakeVerification',
+                tooltip: 'Click to flag: Fake verification badge'
+              }
+            ]
+          },
+          
+          // Post Statistics
+          stats: {
+            likes: 1243,
+            comments: 5672,
+            shares: 892
+          },
+          
+          // Correct Answer
+          correctVerdict: 'scam',
+          
+          // Feedback for user's choice
+          feedback: {
+            correct: {
+              title: '✅ Correct! This is a SCAM',
+              message: 'Great detective work! Here are the red flags you spotted:',
+              redFlags: [
+                '🚩 Asks for shipping/processing fee (legitimate giveaways never require payment)',
+                '🚩 Fake verification badge (just an emoji, not real platform verification)',
+                '🚩 Shortened URL (bit.ly) - could lead to phishing site',
+                '🚩 Unrealistic prize (100 iPhones worth $100,000+)',
+                '🚩 Artificial urgency ("24 HOURS LEFT!")',
+                '🚩 Suspicious account name not matching official Apple social media'
+              ]
+            },
+            incorrect: {
+              title: '❌ Incorrect - This is actually a SCAM',
+              message: 'Let me show you the red flags you missed:',
+              redFlags: [
+                '🚩 Legitimate companies NEVER ask for fees to claim prizes',
+                '🚩 The verification badge is fake (just an emoji)',
+                '🚩 Shortened URLs often lead to phishing sites',
+                '🚩 100 new iPhones would cost over $100,000 - unrealistic',
+                '🚩 Real Apple giveaways would be on official @Apple account'
+              ]
+            }
+          }
         },
-        requiresPayment: {
-          title: "Requires Payment",
-          description: "Legitimate giveaways don't require you to pay to enter.",
-          redFlag: "Asking for payment, fees, or shipping costs upfront"
+        
+        {
+          // Post 2: LEGITIMATE - Real Company Giveaway
+          postId: 'post-2',
+          postType: 'legitimate',
+          
+          // Post Header Information
+          header: {
+            username: 'Starbucks',
+            handle: '@Starbucks',
+            avatar: '☕',
+            verified: true, // real platform verification
+            verifiedBadge: '✓', // platform badge (real)
+            verifiedColor: '#1DA1F2',
+            timestamp: '5 hours ago'
+          },
+          
+          // Post Content
+          content: {
+            text: `☕ **Holiday Season Giveaway** ☕
+  
+  To celebrate the holidays, we're giving away a year of free coffee to 5 lucky winners!
+  
+  **How to enter:**
+  1. Follow @Starbucks
+  2. Like this post
+  3. Comment with your favorite holiday drink
+  
+  Winners will be randomly selected on December 20th and notified via DM. No purchase necessary. See official rules at starbucks.com/giveaway
+  
+  *We will NEVER ask you to pay fees or provide credit card information to claim a prize.*`,
+            
+            // No highlighted elements - this is legitimate
+            highlightedElements: []
+          },
+          
+          // Post Statistics
+          stats: {
+            likes: 45293,
+            comments: 12847,
+            shares: 3421
+          },
+          
+          // Correct Answer
+          correctVerdict: 'legitimate',
+          
+          // Feedback for user's choice
+          feedback: {
+            correct: {
+              title: '✅ Correct! This is LEGITIMATE',
+              message: 'Excellent judgment! Here are the signs of a real giveaway:',
+              redFlags: [
+                '✅ Official verified account with real blue checkmark',
+                '✅ Reasonable prize (year of coffee, not cash/expensive items)',
+                '✅ No payment or personal information required',
+                '✅ Links to official rules on company website',
+                '✅ Explicitly states they won\'t ask for payment or credit cards',
+                '✅ High engagement from real followers',
+                '✅ Simple entry process (no suspicious links or fees)'
+              ]
+            },
+            incorrect: {
+              title: '❌ Incorrect - This is actually LEGITIMATE',
+              message: 'This is a real giveaway! Here\'s what makes it legitimate:',
+              redFlags: [
+                '✅ Official verified Starbucks account',
+                '✅ No payment required',
+                '✅ Links to official rules on their website',
+                '✅ Reasonable prize that matches their business',
+                '✅ States clearly they won\'t ask for payment',
+                'Real companies do run legitimate giveaways for marketing!'
+              ]
+            }
+          }
         },
-        fakeVerified: {
-          title: "Fake Verified Badge",
-          description: "Scammers create accounts that look verified but aren't official.",
-          redFlag: "Account mimics official brand but isn't verified"
-        },
-        urgentDeadline: {
-          title: "Urgent Deadline",
-          description: "Creating false urgency to prevent you from thinking clearly.",
-          redFlag: "Extremely short deadlines or limited-time pressure"
+        
+        {
+          // Post 3: SCAM - Cash App Advance-Fee Fraud
+          postId: 'post-3',
+          postType: 'scam',
+          
+          // Post Header Information
+          header: {
+            username: 'Mr.Beast Official',
+            handle: '@MrBeast-Giveaway99',
+            avatar: '💰',
+            verified: false, // fake verification
+            verifiedBadge: '✓', // emoji badge (fake)
+            timestamp: '1 hour ago'
+          },
+          
+          // Post Content
+          content: {
+            text: `💵 **$10,000 CASH GIVEAWAY!!!** 💵
+  
+  I'm feeling generous today! Sending $10,000 via Cash App to the first 100 people who follow these steps:
+  
+  1. Follow me NOW
+  2. Send $25 activation fee to my Cash App: $MrBeast-Giveaway99
+  3. Send screenshot of payment in DM
+  4. I'll send you $10,000 within 5 minutes!
+  
+  ⏰ HURRY! Limited spots! ⏰
+  
+  Already paid out 47 people! You could be next! 🤑💰`,
+            
+            // Highlighted suspicious elements
+            highlightedElements: [
+              {
+                text: '$10,000 CASH GIVEAWAY!!!',
+                flagType: 'unrealisticPrize',
+                tooltip: 'Click to flag: Unrealistic cash prize'
+              },
+              {
+                text: 'Mr.Beast Official',
+                flagType: 'impersonation',
+                tooltip: 'Click to flag: Celebrity impersonation'
+              },
+              {
+                text: '$25 activation fee',
+                flagType: 'paymentRequest',
+                tooltip: 'Click to flag: Requires payment'
+              },
+              {
+                text: 'Send screenshot of payment',
+                flagType: 'sensitiveInfo',
+                tooltip: 'Click to flag: Requests sensitive info'
+              },
+              {
+                text: 'I\'ll send you $10,000 within 5 minutes!',
+                flagType: 'tooGoodToBeTrue',
+                tooltip: 'Click to flag: Too good to be true'
+              },
+              {
+                text: 'HURRY! Limited spots!',
+                flagType: 'artificialUrgency',
+                tooltip: 'Click to flag: Artificial urgency'
+              }
+            ]
+          },
+          
+          // Post Statistics
+          stats: {
+            likes: 892,
+            comments: 2341,
+            shares: 156
+          },
+          
+          // Correct Answer
+          correctVerdict: 'scam',
+          
+          // Feedback for user's choice
+          feedback: {
+            correct: {
+              title: '✅ Correct! This is a SCAM',
+              message: 'Perfect! You spotted this "advance fee" scam. Red flags:',
+              redFlags: [
+                '🚩 Requires payment ($25 "activation fee") to receive money',
+                '🚩 Fake account impersonating celebrity (likely misspelled username)',
+                '🚩 Fake verification badge (emoji)',
+                '🚩 Too good to be true (send $25, get $10,000)',
+                '🚩 Artificial urgency and limited spots',
+                '🚩 Asks to DM payment screenshots (to confirm victims)',
+                '🚩 Real MrBeast would NEVER ask followers to send money first'
+              ]
+            },
+            incorrect: {
+              title: '❌ Incorrect - This is a classic SCAM',
+              message: 'This is a dangerous advance-fee fraud! Red flags:',
+              redFlags: [
+                '🚩 MAJOR: Requires payment to receive prize (classic scam)',
+                '🚩 Real celebrities NEVER ask followers to send money',
+                '🚩 Promise of huge return ($25 → $10,000) is impossible',
+                '🚩 Impersonating famous person',
+                '🚩 Creates false urgency',
+                'RULE: If you have to pay to "win," it\'s ALWAYS a scam!'
+              ]
+            }
+          }
         }
-      },
+      ],
       
-      quizzes: {
-        tooGoodToBeTrue: {
-          text: "🎁 What makes a giveaway suspicious?",
-          options: [
-            { text: "High-value prizes", correct: false },
-            { text: "Unrealistic prizes with easy entry", correct: true },
-            { text: "Requiring social media shares", correct: false },
-            { text: "Having official branding", correct: false }
-          ],
-          feedback: "Exactly! Scams often offer unrealistic prizes with suspiciously easy entry requirements."
+      // Educational content to display
+      educationalContent: {
+        introduction: {
+          title: '🎓 What You\'ll Learn',
+          points: [
+            'Distinguish legitimate from fake giveaways',
+            'Recognize advance-fee fraud tactics',
+            'Identify suspicious URLs and payment requests',
+            'Understand verification authenticity'
+          ]
+        },
+        
+        safetyTips: {
+          title: '🛡️ Giveaway Safety Tips',
+          tips: [
+            '✅ Real companies never ask for fees to claim prizes',
+            '✅ Verify accounts through official channels',
+            '✅ Check for platform-issued verification badges',
+            '✅ Be skeptical of "too good to be true" offers',
+            '✅ Never send money to claim a prize',
+            '✅ Report suspicious accounts immediately'
+          ]
+        },
+        
+        commonScamTactics: {
+          title: '🚨 Common Scam Tactics',
+          tactics: [
+            'Advance-fee fraud (pay to claim prize)',
+            'Fake verification badges',
+            'Celebrity/brand impersonation',
+            'Artificial urgency and limited availability',
+            'Shortened or suspicious URLs',
+            'Requests for personal/financial information',
+            'Unrealistic prize values or quantities'
+          ]
         }
       }
     },
     
+    // Scoring Configuration
     scoring: {
       maxScore: 100,
-      scorePerFlag: 20,
-      scorePerQuiz: 30,
-      bonusPoints: 10,
-      xpReward: 70
+      scorePerCorrectVerdict: 33, // 33 points per correct answer (3 posts)
+      bonusPoints: 1, // bonus for getting all correct
+      passingScore: 66, // need 2 out of 3 correct
+      xpReward: 75
     },
     
+    // Completion Requirements
+    completionRequirements: {
+      minimumCorrect: 2, // must get at least 2 out of 3 correct
+      totalPosts: 3
+    },
+    
+    // Unlock Requirements
     unlockRequirements: {
-      minimumLevel: 1,
-      previousMissions: ['spot-fake-profile']
+      minimumLevel: 2,
+      prerequisiteMissions: ['spot-fake-profile']
+    },
+    
+    // Mission Rewards
+    rewards: {
+      xp: 75,
+      points: 100,
+      badges: ['giveaway-detective'],
+      unlocks: ['investment-scheme-alert']
     }
   },
 
