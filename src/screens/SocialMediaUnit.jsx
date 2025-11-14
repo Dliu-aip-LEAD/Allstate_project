@@ -133,9 +133,10 @@ const SocialMediaUnit = () => {
       return false;
     }
     
-    // Check previous missions requirement
-    if (requirements.previousMissions && requirements.previousMissions.length > 0) {
-      for (const prevMissionId of requirements.previousMissions) {
+    // Check previous missions requirement (support both previousMissions and prerequisiteMissions)
+    const prerequisiteMissions = requirements.prerequisiteMissions || requirements.previousMissions || [];
+    if (prerequisiteMissions.length > 0) {
+      for (const prevMissionId of prerequisiteMissions) {
         const prevMission = missions[prevMissionId];
         if (prevMission) {
           const prevMissionStatus = getMissionStatus(prevMissionId);
@@ -187,8 +188,9 @@ const SocialMediaUnit = () => {
       requirements.push(`Level ${req.minimumLevel || 1}`);
     }
     
-    if (req.previousMissions && req.previousMissions.length > 0) {
-      const prevMissionNames = req.previousMissions
+    const prerequisiteMissions = req.prerequisiteMissions || req.previousMissions || [];
+    if (prerequisiteMissions.length > 0) {
+      const prevMissionNames = prerequisiteMissions
         .map(id => missions[id]?.title || id)
         .join(', ');
       requirements.push(`Complete: ${prevMissionNames}`);
@@ -315,6 +317,28 @@ const SocialMediaUnit = () => {
               
               <div className="space-y-4">
                 {groupedMissions.beginner.map((mission) => (
+                  <MissionCard
+                    key={mission.id}
+                    mission={mission}
+                    onClick={handleMissionClick}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Intermediate Mission Section */}
+        {groupedMissions.intermediate.length > 0 && (
+          <section className="w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                <h2 className="text-yellow-500 font-bold text-lg">Intermediate Missions</h2>
+              </div>
+              
+              <div className="space-y-4">
+                {groupedMissions.intermediate.map((mission) => (
                   <MissionCard
                     key={mission.id}
                     mission={mission}

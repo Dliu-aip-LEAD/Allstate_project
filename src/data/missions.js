@@ -1216,131 +1216,841 @@ CONFIDENTIAL: This email contains privileged and confidential information intend
     }
   },
 
-  'spot-fake-profile': {
-    id: 'spot-fake-profile',
-    title: 'Spot the Fake Profile',
-    description: 'Identify suspicious elements in fake social media profiles',
-    department: 'social-media',
-    difficulty: 'beginner',
+  'spot-fake-profile':{
+    id: "spot-fake-profile",
+    title: "Spot Fake Profile",
+    description: "Identify fake celebrity/influencer accounts trying to scam followers",
+    department: "social-media",
+    difficulty: "beginner",
     requiredLevel: 1,
     estimatedTime: 12,
     
     content: {
-      type: 'profile',
-      scenario: 'A friend asks you to review a profile that contacted them. Can you identify the red flags that indicate this is a fake account?',
+      type: "social-media-accounts",
+      scenario: "We've received reports of fake celebrity accounts scamming fans. These imposters pretend to be famous influencers and ask followers to send money, gift cards, or personal information. Your mission is to identify which account is fake by analyzing profile details, engagement patterns, and communication style. Let's catch these imposters!",
       
-      clues: {
-        newAccount: {
-          title: "New Account",
-          description: "The account was created very recently, which is suspicious for someone claiming to be established.",
-          redFlag: "Account created within the last few days or weeks"
-        },
-        fewConnections: {
-          title: "Few Connections",
-          description: "Legitimate users typically have more friends and connections over time.",
-          redFlag: "Very few friends or followers"
-        },
-        stolenPhotos: {
-          title: "Stolen Photos",
-          description: "Reverse image search reveals these photos belong to someone else.",
-          redFlag: "Photos appear on multiple unrelated accounts"
-        },
-        genericContent: {
-          title: "Generic Content",
-          description: "Posts are generic, reposted, or don't show personal experiences.",
-          redFlag: "Lack of personal, original content"
-        }
+      comparisonSetup: {
+        instruction: "One of these accounts is REAL, one is FAKE. Study the details carefully!",
+        accountsToCompare: 2,
+        realAccountIndex: 0,
+        fakeAccountIndex: 1
       },
       
-      quizzes: {
-        newAccount: {
-          text: "🔍 Why is a newly created account suspicious?",
-          options: [
-            { text: "Everyone starts with a new account", correct: false },
-            { text: "Scammers often create new accounts to avoid detection", correct: true },
-            { text: "New accounts are always fake", correct: false },
-            { text: "It's normal for established users", correct: false }
+      accounts: [
+        {
+          accountId: "account-1",
+          accountType: "real",
+          isCorrectAnswer: false,
+          
+          header: {
+            platformStyle: "instagram",
+            backgroundColor: "#667eea",
+            backgroundGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+          },
+          
+          profile: {
+            name: "Sarah Mitchell",
+            username: "@SarahMitchellOfficial",
+            avatar: "👩",
+            verified: true,
+            verificationBadge: {
+              type: "platform",
+              color: "#1DA1F2",
+              icon: "✓"
+            },
+            bio: "Content Creator | Fashion & Lifestyle\n📍 Los Angeles, CA\n💼 Business: team@sarahmitchell.com",
+            location: "Los Angeles, CA"
+          },
+          
+          statistics: {
+            followers: 2400000,
+            following: 892,
+            posts: 3245,
+            averageEngagement: {
+              likesPerPost: 45000,
+              commentsPerPost: 2300,
+              description: "High engagement ratio - typical for verified accounts"
+            }
+          },
+          
+          accountInfo: [
+            {
+              label: "Joined",
+              value: "March 2015",
+              isRedFlag: false
+            },
+            {
+              label: "Website",
+              value: "sarahmitchell.com",
+              isRedFlag: false,
+              verifiable: true
+            },
+            {
+              label: "Business Email",
+              value: "team@sarahmitchell.com",
+              isRedFlag: false
+            },
+            {
+              label: "Recent Activity",
+              value: "Posts regularly with authentic engagement",
+              isRedFlag: false
+            }
           ],
-          feedback: "Correct! Scammers create new accounts to avoid being flagged by previous victims."
+          
+          recentPost: {
+            text: "Thank you for 2M followers! 🎉 Remember, I NEVER ask for money or gift cards via DM. If someone claiming to be me does, it's a scam! Report and block them. Stay safe! ❤️",
+            engagement: {
+              likes: 52000,
+              comments: 3400,
+              shares: 890
+            },
+            hasScamWarning: true
+          },
+          
+          redFlags: [],
+          
+          legitimacyIndicators: [
+            "✅ Official verified account with real blue checkmark",
+            "✅ Established join date (2015)",
+            "✅ High follower count with reasonable following ratio",
+            "✅ Official website linked",
+            "✅ Professional business contact information",
+            "✅ High engagement rate (45K likes per post)",
+            "✅ Actively warns followers about scams",
+            "✅ Authentic interaction patterns"
+          ]
+        },
+        
+        {
+          accountId: "account-2",
+          accountType: "fake",
+          isCorrectAnswer: true,
+          
+          header: {
+            platformStyle: "instagram",
+            backgroundColor: "#667eea",
+            backgroundGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+          },
+          
+          profile: {
+            name: "Sarah Mitchell",
+            username: "@SarahMitchell_0fficial",
+            avatar: "👩",
+            verified: false,
+            verificationBadge: {
+              type: "fake-emoji",
+              color: "#999999",
+              icon: "✓",
+              note: "This is just an emoji, not a platform-issued badge"
+            },
+            bio: "Official Account 💎\nDM me for collaborations! 💰\nClick link below 👇",
+            location: "Not specified"
+          },
+          
+          statistics: {
+            followers: 15200,
+            following: 7234,
+            posts: 47,
+            averageEngagement: {
+              likesPerPost: 200,
+              commentsPerPost: 45,
+              description: "Very low engagement ratio - suspicious"
+            }
+          },
+          
+          accountInfo: [
+            {
+              label: "Joined",
+              value: "October 2024",
+              isRedFlag: true,
+              redFlagType: "recentAccount"
+            },
+            {
+              label: "Website",
+              value: "No website linked",
+              isRedFlag: true,
+              redFlagType: "noWebsite"
+            },
+            {
+              label: "Contact",
+              value: "DM me for collaborations! 💰",
+              isRedFlag: true,
+              redFlagType: "unprofessionalContact"
+            },
+            {
+              label: "Recent Activity",
+              value: "Sends unsolicited DMs asking for money",
+              isRedFlag: true,
+              redFlagType: "scamBehavior"
+            }
+          ],
+          
+          recentPost: {
+            text: "🎁 GIVEAWAY ALERT! 🎁 I'm giving away $5000 to 10 lucky winners! To enter: 1) Follow me 2) Like this post 3) DM me your email and phone number 4) Send $25 processing fee via Cash App to claim your prize! Winner announced in 24 hours! ⏰✨",
+            engagement: {
+              likes: 180,
+              comments: 89,
+              shares: 12
+            },
+            hasScamWarning: false
+          },
+          
+          redFlags: [
+            {
+              type: "usernameVariation",
+              description: "Username uses '0' instead of 'O' and underscore",
+              severity: "high",
+              explanation: "Typosquatting - using character substitutions to impersonate real accounts"
+            },
+            {
+              type: "fakeVerification",
+              description: "Verification badge is just an emoji, not platform-issued",
+              severity: "critical",
+              explanation: "Real verification badges are issued by the platform and have specific styling"
+            },
+            {
+              type: "recentCreation",
+              description: "Account created recently (October 2024)",
+              severity: "medium",
+              explanation: "Real influencer accounts are typically established years ago"
+            },
+            {
+              type: "suspiciousRatio",
+              description: "Following more accounts (7,234) than followers (15,200)",
+              severity: "medium",
+              explanation: "Real influencers typically have much higher follower-to-following ratio"
+            },
+            {
+              type: "lowPostCount",
+              description: "Only 47 posts despite claiming to be established influencer",
+              severity: "medium",
+              explanation: "Real content creators have extensive post history"
+            },
+            {
+              type: "lowEngagement",
+              description: "Only 200 likes per post with 15K followers (1.3% engagement)",
+              severity: "high",
+              explanation: "Real influencers typically have 3-10% engagement rate"
+            },
+            {
+              type: "noWebsite",
+              description: "No official website or professional contact information",
+              severity: "medium",
+              explanation: "Established influencers always have official websites"
+            },
+            {
+              type: "scamGiveaway",
+              description: "Giveaway requires processing fee ($25)",
+              severity: "critical",
+              explanation: "Legitimate giveaways NEVER require payment"
+            },
+            {
+              type: "personalInfoRequest",
+              description: "Asks for email and phone number via DM",
+              severity: "high",
+              explanation: "Collecting personal information for identity theft or further scams"
+            }
+          ],
+          
+          scamTactics: [
+            "🚩 Username variation to deceive followers",
+            "🚩 Fake verification badge (emoji)",
+            "🚩 Very recent account creation",
+            "🚩 Low engagement vs follower count",
+            "🚩 Minimal post history",
+            "🚩 No professional contact information",
+            "🚩 Requests payment for 'giveaway'",
+            "🚩 Asks for personal information",
+            "🚩 Unprofessional communication"
+          ]
+        }
+      ],
+      
+      quiz: {
+        instruction: "Answer these questions to complete your investigation:",
+        questions: [
+          {
+            questionId: "q1",
+            type: "single-choice",
+            text: "Which account is the FAKE impersonator?",
+            points: 25,
+            options: [
+              {
+                id: "opt1",
+                text: "Account 1 (@SarahMitchellOfficial)",
+                isCorrect: false
+              },
+              {
+                id: "opt2",
+                text: "Account 2 (@SarahMitchell_0fficial)",
+                isCorrect: true
+              }
+            ],
+            feedback: {
+              correct: "Correct! Account 2 is the fake impersonator using typosquatting (0 instead of O).",
+              incorrect: "Incorrect. Account 2 is the fake one - notice the '0' instead of 'O' in the username and the fake verification badge."
+            },
+            explanation: "The fake account uses '@SarahMitchell_0fficial' with a zero instead of the letter O, a common impersonation technique called typosquatting."
+          },
+          
+          {
+            questionId: "q2",
+            type: "single-choice",
+            text: "What is the BIGGEST red flag in the fake account?",
+            points: 25,
+            options: [
+              {
+                id: "opt1",
+                text: "Low follower count",
+                isCorrect: false
+              },
+              {
+                id: "opt2",
+                text: "Asking for money/processing fees in 'giveaway'",
+                isCorrect: true
+              },
+              {
+                id: "opt3",
+                text: "Recent join date",
+                isCorrect: false
+              },
+              {
+                id: "opt4",
+                text: "No website linked",
+                isCorrect: false
+              }
+            ],
+            feedback: {
+              correct: "Exactly right! Asking for payment to claim a prize is the clearest sign of a scam. Real giveaways NEVER require fees.",
+              incorrect: "While all these are red flags, the BIGGEST one is asking for $25 processing fee. Legitimate giveaways never require payment."
+            },
+            explanation: "Requesting payment or 'processing fees' for giveaways is a critical red flag. Real influencers and brands never ask for money to claim prizes."
+          },
+          
+          {
+            questionId: "q3",
+            type: "single-choice",
+            text: "How can you tell the verification badge is fake?",
+            points: 25,
+            options: [
+              {
+                id: "opt1",
+                text: "Real verified accounts have blue checkmarks from the platform",
+                isCorrect: false
+              },
+              {
+                id: "opt2",
+                text: "The badge looks slightly different in color",
+                isCorrect: false
+              },
+              {
+                id: "opt3",
+                text: "Anyone can add emoji checkmarks to their name",
+                isCorrect: false
+              },
+              {
+                id: "opt4",
+                text: "All of the above",
+                isCorrect: true
+              }
+            ],
+            feedback: {
+              correct: "Perfect! All of these are correct. Platform-issued verification badges have specific styling that can't be replicated with emojis.",
+              incorrect: "Actually, all of these statements are true. The combination of these factors helps identify fake verification badges."
+            },
+            explanation: "Real verification badges are issued by the social media platform and have distinctive styling. Fake accounts often use emoji checkmarks (✓) that anyone can add to their username or bio."
+          },
+          
+          {
+            questionId: "q4",
+            type: "single-choice",
+            text: "What should you do if you receive a DM from this fake account?",
+            points: 25,
+            options: [
+              {
+                id: "opt1",
+                text: "Send the money to see if it's real",
+                isCorrect: false
+              },
+              {
+                id: "opt2",
+                text: "Report the account and block them",
+                isCorrect: true
+              },
+              {
+                id: "opt3",
+                text: "Share your personal information",
+                isCorrect: false
+              },
+              {
+                id: "opt4",
+                text: "Reply to ask questions",
+                isCorrect: false
+              }
+            ],
+            feedback: {
+              correct: "Absolutely correct! Always report and block suspicious accounts to protect yourself and others.",
+              incorrect: "Never engage with scam accounts. The correct action is to report and block them immediately."
+            },
+            explanation: "When you encounter a fake account, report it to the platform and block it. Never send money, share personal information, or engage with scammers."
+          }
+        ]
+      },
+      
+      educationalContent: {
+        keyLearnings: {
+          title: "🎓 Key Red Flags in Fake Influencer Accounts",
+          points: [
+            "Username variations (0 for O, added underscores, slight misspellings)",
+            "Fake verification badges (emoji checkmarks instead of platform badges)",
+            "Recent account creation dates",
+            "Low post count compared to claimed popularity",
+            "Suspicious follower-to-following ratios",
+            "Very low engagement rates (likes/comments vs followers)",
+            "No official website or professional contact",
+            "Requests for payment in 'giveaways'",
+            "Asking for personal information via DM"
+          ]
+        },
+        
+        safetyTips: {
+          title: "🛡️ How to Verify Real Accounts",
+          tips: [
+            "✅ Check for platform-issued verification badge (blue checkmark)",
+            "✅ Verify username spelling carefully",
+            "✅ Look at account creation date (established accounts)",
+            "✅ Check engagement ratio (should be 3-10% of followers)",
+            "✅ Visit official website to confirm social media links",
+            "✅ Real celebrities never ask for money in DMs",
+            "✅ Cross-reference with other official accounts",
+            "✅ Be skeptical of too-good-to-be-true offers"
+          ]
+        },
+        
+        commonTactics: {
+          title: "🎭 Common Impersonation Tactics",
+          tactics: [
+            "Typosquatting - slight username variations (O→0, I→l)",
+            "Fake verification badges - emoji checkmarks",
+            "Copy-paste bio and photos from real accounts",
+            "Promise of exclusive deals or giveaways",
+            "Request payment for 'processing fees'",
+            "Ask for personal information",
+            "Create urgency with limited-time offers",
+            "Use emotional manipulation",
+            "Impersonate customer service accounts"
+          ]
         }
       }
     },
     
     scoring: {
       maxScore: 100,
-      scorePerFlag: 20,
-      scorePerQuiz: 30,
-      bonusPoints: 10,
-      xpReward: 60
+      accountSelection: {
+        points: 0,
+        description: "No points for account selection - included in quiz Q1"
+      },
+      quizScoring: {
+        totalQuestions: 4,
+        pointsPerQuestion: 25,
+        passingScore: 75
+      },
+      bonusPoints: 0,
+      xpReward: 75
     },
     
     unlockRequirements: {
-      minimumLevel: 1,
-      previousMissions: ['social-media-basics']
-    }
+      minimumLevel: 2,
+      prerequisiteMissions: []
+    },
+    
+    rewards: {
+      xp: 75,
+      points: 100,
+      badges: ["profile-detective", "impersonation-spotter"],
+      unlocks: ["investment-scheme-alert", "friend-request-trap"]
+    },
+    
+    hints: [
+      {
+        cost: 5,
+        text: "Look carefully at the usernames - is there any character substitution?"
+      },
+      {
+        cost: 5,
+        text: "Compare the engagement rates (likes per post vs total followers)"
+      },
+      {
+        cost: 10,
+        text: "Check if the verification badge is a real platform badge or just an emoji"
+      }
+    ]
   },
 
   'fake-giveaway-detector': {
+    // Basic Mission Information
     id: 'fake-giveaway-detector',
     title: 'Fake Giveaway Detector',
-    description: 'Analyze three social media posts and determine which are legitimate and which are scams',
+    description: 'Analyze social media posts to distinguish legitimate giveaways from scam attempts',
     department: 'social-media',
     difficulty: 'beginner',
-    requiredLevel: 1,
-    estimatedTime: 15,
+    requiredLevel: 2,
+    estimatedTime: 12,
     
+    // Mission Content
     content: {
-      type: 'posts',
-      scenario: 'You see multiple giveaway posts on social media. Some are legitimate promotions, others are scams. Can you tell the difference?',
+      type: 'social-media-posts',
+      scenario: 'Detective, fake giveaways are everywhere on social media! Scammers use them to steal personal information, spread malware, or trick people into sending money. Your mission: analyze these social media posts and determine which are legitimate and which are scams. Look for red flags like suspicious URLs, requests for payment, and unrealistic prizes!',
       
-      clues: {
-        tooGoodToBeTrue: {
-          title: "Too Good to Be True",
-          description: "Offers that seem unrealistically generous are usually scams.",
-          redFlag: "Extremely high-value prizes with easy entry requirements"
+      // Array of social media posts to analyze
+      posts: [
+        {
+          // Post 1: SCAM - Fake iPhone Giveaway
+          postId: 'post-1',
+          postType: 'scam',
+          
+          // Post Header Information
+          header: {
+            username: 'Apple Giveaways',
+            handle: '@AppleGiveaways_Official',
+            avatar: '📱',
+            verified: false, // fake verification
+            verifiedBadge: '✓', // emoji badge (fake)
+            timestamp: '2 hours ago'
+          },
+          
+          // Post Content
+          content: {
+            text: `🎉 **FREE iPhone 15 Pro MAX GIVEAWAY!** 🎉
+  
+  We're giving away 100 NEW iPhone 15 Pro to celebrate reaching 50K followers! 🎊
+  
+  **TO ENTER:**
+  1. Follow @AppleGiveaways_Official
+  2. Like & Share this post
+  3. Tag 10 friends in comments
+  4. Click link to verify: bit.ly/free-iphone-claim
+  5. Pay $9.99 shipping fee to claim
+  
+  ⏰ ONLY 24 HOURS LEFT! Winners announced tomorrow!
+  
+  ⚠️ Must complete ALL steps or you won't be entered!`,
+            
+            // Highlighted suspicious elements
+            highlightedElements: [
+              {
+                text: '100 NEW iPhone 15 Pro',
+                flagType: 'unrealisticPrize',
+                tooltip: 'Click to flag: Unrealistic prize quantity'
+              },
+              {
+                text: 'bit.ly/free-iphone-claim',
+                flagType: 'suspiciousUrl',
+                tooltip: 'Click to flag: Shortened URL'
+              },
+              {
+                text: 'Pay $9.99 shipping fee',
+                flagType: 'paymentRequest',
+                tooltip: 'Click to flag: Payment required'
+              },
+              {
+                text: 'ONLY 24 HOURS LEFT!',
+                flagType: 'artificialUrgency',
+                tooltip: 'Click to flag: Artificial urgency'
+              },
+              {
+                text: '✓',
+                flagType: 'fakeVerification',
+                tooltip: 'Click to flag: Fake verification badge'
+              }
+            ]
+          },
+          
+          // Post Statistics
+          stats: {
+            likes: 1243,
+            comments: 5672,
+            shares: 892
+          },
+          
+          // Correct Answer
+          correctVerdict: 'scam',
+          
+          // Feedback for user's choice
+          feedback: {
+            correct: {
+              title: '✅ Correct! This is a SCAM',
+              message: 'Great detective work! Here are the red flags you spotted:',
+              redFlags: [
+                '🚩 Asks for shipping/processing fee (legitimate giveaways never require payment)',
+                '🚩 Fake verification badge (just an emoji, not real platform verification)',
+                '🚩 Shortened URL (bit.ly) - could lead to phishing site',
+                '🚩 Unrealistic prize (100 iPhones worth $100,000+)',
+                '🚩 Artificial urgency ("24 HOURS LEFT!")',
+                '🚩 Suspicious account name not matching official Apple social media'
+              ]
+            },
+            incorrect: {
+              title: '❌ Incorrect - This is actually a SCAM',
+              message: 'Let me show you the red flags you missed:',
+              redFlags: [
+                '🚩 Legitimate companies NEVER ask for fees to claim prizes',
+                '🚩 The verification badge is fake (just an emoji)',
+                '🚩 Shortened URLs often lead to phishing sites',
+                '🚩 100 new iPhones would cost over $100,000 - unrealistic',
+                '🚩 Real Apple giveaways would be on official @Apple account'
+              ]
+            }
+          }
         },
-        requiresPayment: {
-          title: "Requires Payment",
-          description: "Legitimate giveaways don't require you to pay to enter.",
-          redFlag: "Asking for payment, fees, or shipping costs upfront"
+        
+        {
+          // Post 2: LEGITIMATE - Real Company Giveaway
+          postId: 'post-2',
+          postType: 'legitimate',
+          
+          // Post Header Information
+          header: {
+            username: 'Starbucks',
+            handle: '@Starbucks',
+            avatar: '☕',
+            verified: true, // real platform verification
+            verifiedBadge: '✓', // platform badge (real)
+            verifiedColor: '#1DA1F2',
+            timestamp: '5 hours ago'
+          },
+          
+          // Post Content
+          content: {
+            text: `☕ **Holiday Season Giveaway** ☕
+  
+  To celebrate the holidays, we're giving away a year of free coffee to 5 lucky winners!
+  
+  **How to enter:**
+  1. Follow @Starbucks
+  2. Like this post
+  3. Comment with your favorite holiday drink
+  
+  Winners will be randomly selected on December 20th and notified via DM. No purchase necessary. See official rules at starbucks.com/giveaway
+  
+  *We will NEVER ask you to pay fees or provide credit card information to claim a prize.*`,
+            
+            // No highlighted elements - this is legitimate
+            highlightedElements: []
+          },
+          
+          // Post Statistics
+          stats: {
+            likes: 45293,
+            comments: 12847,
+            shares: 3421
+          },
+          
+          // Correct Answer
+          correctVerdict: 'legitimate',
+          
+          // Feedback for user's choice
+          feedback: {
+            correct: {
+              title: '✅ Correct! This is LEGITIMATE',
+              message: 'Excellent judgment! Here are the signs of a real giveaway:',
+              redFlags: [
+                '✅ Official verified account with real blue checkmark',
+                '✅ Reasonable prize (year of coffee, not cash/expensive items)',
+                '✅ No payment or personal information required',
+                '✅ Links to official rules on company website',
+                '✅ Explicitly states they won\'t ask for payment or credit cards',
+                '✅ High engagement from real followers',
+                '✅ Simple entry process (no suspicious links or fees)'
+              ]
+            },
+            incorrect: {
+              title: '❌ Incorrect - This is actually LEGITIMATE',
+              message: 'This is a real giveaway! Here\'s what makes it legitimate:',
+              redFlags: [
+                '✅ Official verified Starbucks account',
+                '✅ No payment required',
+                '✅ Links to official rules on their website',
+                '✅ Reasonable prize that matches their business',
+                '✅ States clearly they won\'t ask for payment',
+                'Real companies do run legitimate giveaways for marketing!'
+              ]
+            }
+          }
         },
-        fakeVerified: {
-          title: "Fake Verified Badge",
-          description: "Scammers create accounts that look verified but aren't official.",
-          redFlag: "Account mimics official brand but isn't verified"
-        },
-        urgentDeadline: {
-          title: "Urgent Deadline",
-          description: "Creating false urgency to prevent you from thinking clearly.",
-          redFlag: "Extremely short deadlines or limited-time pressure"
+        
+        {
+          // Post 3: SCAM - Cash App Advance-Fee Fraud
+          postId: 'post-3',
+          postType: 'scam',
+          
+          // Post Header Information
+          header: {
+            username: 'Mr.Beast Official',
+            handle: '@MrBeast-Giveaway99',
+            avatar: '💰',
+            verified: false, // fake verification
+            verifiedBadge: '✓', // emoji badge (fake)
+            timestamp: '1 hour ago'
+          },
+          
+          // Post Content
+          content: {
+            text: `💵 **$10,000 CASH GIVEAWAY!!!** 💵
+  
+  I'm feeling generous today! Sending $10,000 via Cash App to the first 100 people who follow these steps:
+  
+  1. Follow me NOW
+  2. Send $25 activation fee to my Cash App: $MrBeast-Giveaway99
+  3. Send screenshot of payment in DM
+  4. I'll send you $10,000 within 5 minutes!
+  
+  ⏰ HURRY! Limited spots! ⏰
+  
+  Already paid out 47 people! You could be next! 🤑💰`,
+            
+            // Highlighted suspicious elements
+            highlightedElements: [
+              {
+                text: '$10,000 CASH GIVEAWAY!!!',
+                flagType: 'unrealisticPrize',
+                tooltip: 'Click to flag: Unrealistic cash prize'
+              },
+              {
+                text: 'Mr.Beast Official',
+                flagType: 'impersonation',
+                tooltip: 'Click to flag: Celebrity impersonation'
+              },
+              {
+                text: '$25 activation fee',
+                flagType: 'paymentRequest',
+                tooltip: 'Click to flag: Requires payment'
+              },
+              {
+                text: 'Send screenshot of payment',
+                flagType: 'sensitiveInfo',
+                tooltip: 'Click to flag: Requests sensitive info'
+              },
+              {
+                text: 'I\'ll send you $10,000 within 5 minutes!',
+                flagType: 'tooGoodToBeTrue',
+                tooltip: 'Click to flag: Too good to be true'
+              },
+              {
+                text: 'HURRY! Limited spots!',
+                flagType: 'artificialUrgency',
+                tooltip: 'Click to flag: Artificial urgency'
+              }
+            ]
+          },
+          
+          // Post Statistics
+          stats: {
+            likes: 892,
+            comments: 2341,
+            shares: 156
+          },
+          
+          // Correct Answer
+          correctVerdict: 'scam',
+          
+          // Feedback for user's choice
+          feedback: {
+            correct: {
+              title: '✅ Correct! This is a SCAM',
+              message: 'Perfect! You spotted this "advance fee" scam. Red flags:',
+              redFlags: [
+                '🚩 Requires payment ($25 "activation fee") to receive money',
+                '🚩 Fake account impersonating celebrity (likely misspelled username)',
+                '🚩 Fake verification badge (emoji)',
+                '🚩 Too good to be true (send $25, get $10,000)',
+                '🚩 Artificial urgency and limited spots',
+                '🚩 Asks to DM payment screenshots (to confirm victims)',
+                '🚩 Real MrBeast would NEVER ask followers to send money first'
+              ]
+            },
+            incorrect: {
+              title: '❌ Incorrect - This is a classic SCAM',
+              message: 'This is a dangerous advance-fee fraud! Red flags:',
+              redFlags: [
+                '🚩 MAJOR: Requires payment to receive prize (classic scam)',
+                '🚩 Real celebrities NEVER ask followers to send money',
+                '🚩 Promise of huge return ($25 → $10,000) is impossible',
+                '🚩 Impersonating famous person',
+                '🚩 Creates false urgency',
+                'RULE: If you have to pay to "win," it\'s ALWAYS a scam!'
+              ]
+            }
+          }
         }
-      },
+      ],
       
-      quizzes: {
-        tooGoodToBeTrue: {
-          text: "🎁 What makes a giveaway suspicious?",
-          options: [
-            { text: "High-value prizes", correct: false },
-            { text: "Unrealistic prizes with easy entry", correct: true },
-            { text: "Requiring social media shares", correct: false },
-            { text: "Having official branding", correct: false }
-          ],
-          feedback: "Exactly! Scams often offer unrealistic prizes with suspiciously easy entry requirements."
+      // Educational content to display
+      educationalContent: {
+        introduction: {
+          title: '🎓 What You\'ll Learn',
+          points: [
+            'Distinguish legitimate from fake giveaways',
+            'Recognize advance-fee fraud tactics',
+            'Identify suspicious URLs and payment requests',
+            'Understand verification authenticity'
+          ]
+        },
+        
+        safetyTips: {
+          title: '🛡️ Giveaway Safety Tips',
+          tips: [
+            '✅ Real companies never ask for fees to claim prizes',
+            '✅ Verify accounts through official channels',
+            '✅ Check for platform-issued verification badges',
+            '✅ Be skeptical of "too good to be true" offers',
+            '✅ Never send money to claim a prize',
+            '✅ Report suspicious accounts immediately'
+          ]
+        },
+        
+        commonScamTactics: {
+          title: '🚨 Common Scam Tactics',
+          tactics: [
+            'Advance-fee fraud (pay to claim prize)',
+            'Fake verification badges',
+            'Celebrity/brand impersonation',
+            'Artificial urgency and limited availability',
+            'Shortened or suspicious URLs',
+            'Requests for personal/financial information',
+            'Unrealistic prize values or quantities'
+          ]
         }
       }
     },
     
+    // Scoring Configuration
     scoring: {
       maxScore: 100,
-      scorePerFlag: 20,
-      scorePerQuiz: 30,
-      bonusPoints: 10,
-      xpReward: 70
+      scorePerCorrectVerdict: 33, // 33 points per correct answer (3 posts)
+      bonusPoints: 1, // bonus for getting all correct
+      passingScore: 66, // need 2 out of 3 correct
+      xpReward: 75
     },
     
+    // Completion Requirements
+    completionRequirements: {
+      minimumCorrect: 2, // must get at least 2 out of 3 correct
+      totalPosts: 3
+    },
+    
+    // Unlock Requirements
     unlockRequirements: {
-      minimumLevel: 1,
-      previousMissions: ['spot-fake-profile']
+      minimumLevel: 2,
+      prerequisiteMissions: ['spot-fake-profile']
+    },
+    
+    // Mission Rewards
+    rewards: {
+      xp: 75,
+      points: 100,
+      badges: ['giveaway-detective'],
+      unlocks: ['investment-scheme-alert']
     }
   },
 

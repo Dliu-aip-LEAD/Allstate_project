@@ -78,9 +78,9 @@ const DetectivePanel = ({
       </div>
       
       {/* Action Panel - Scrollable if needed */}
-      <div className="p-4 border-t border-gray-200 flex-shrink-0 ">
+      <div className="p-4 border-t border-gray-200 flex flex-col min-h-0 flex-1 overflow-hidden">
         {currentQuiz ? (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 flex-shrink-0">
             <div className="text-sm font-semibold text-blue-800 mb-2">
               {currentQuiz.quiz.text}
             </div>
@@ -104,7 +104,7 @@ const DetectivePanel = ({
             </div>
           </div>
         ) : isMissionComplete ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3 text-center">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3 text-center flex-shrink-0">
             <div className="text-sm font-semibold text-green-800 mb-3">
               🎉 All steps complete!
             </div>
@@ -116,29 +116,35 @@ const DetectivePanel = ({
             </button>
           </div>
         ) : (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3 text-center">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3 text-center flex-shrink-0">
             <div className="text-sm text-gray-600">
               Click on suspicious elements in the email to investigate them
             </div>
           </div>
         )}
         
-        {/* Evidence Panel */}
-        <div className="mb-3">
-          <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+        {/* Evidence Panel - Scrollable */}
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 flex-shrink-0">
             🚩 Red Flags Discovered
           </div>
-          <div className="space-y-1">
-            {evidence.map((item, index) => (
-              <div key={`evidence-${item.id || index}-${index}`} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded p-2 text-xs">
-                <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                  !
-                </div>
-                <span className="text-gray-700">
-                  {item.redFlag || item.text || item.title || 'Red flag discovered'}
-                </span>
+          <div className="space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 flex-1 min-h-0">
+            {evidence.length === 0 ? (
+              <div className="text-center text-gray-400 text-xs py-4">
+                No red flags discovered yet
               </div>
-            ))}
+            ) : (
+              evidence.map((item, index) => (
+                <div key={`evidence-${item.id || index}-${index}`} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded p-2 text-xs flex-shrink-0">
+                  <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    !
+                  </div>
+                  <span className="text-gray-700 break-words">
+                    {item.redFlag || item.text || item.title || 'Red flag discovered'}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

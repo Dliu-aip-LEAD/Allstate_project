@@ -45,7 +45,7 @@ const MissionIntroduction = () => {
         additionalGuidance = "This training will help you understand the fundamental concepts and terminology used in cybersecurity. Pay attention to each definition and how it applies to real-world scenarios.";
       } else if (missionData.content.type === 'email') {
         additionalGuidance = "Carefully examine the email content, sender information, and any suspicious elements. Look for patterns that indicate phishing attempts or other email-based scams.";
-      } else if (missionData.content.type === 'social-media') {
+      } else if (missionData.content.type === 'social-media-posts') {
         additionalGuidance = "Analyze the social media profile and content for signs of manipulation or deception. Focus on identifying red flags that suggest this might be a scam.";
       }
 
