@@ -1660,7 +1660,7 @@ CONFIDENTIAL: This email contains privileged and confidential information intend
     },
     
     unlockRequirements: {
-      minimumLevel: 2,
+      minimumLevel: 1,
       prerequisiteMissions: []
     },
     

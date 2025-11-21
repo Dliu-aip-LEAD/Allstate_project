@@ -136,13 +136,10 @@ const SocialMediaUnit = () => {
     // Check previous missions requirement (support both previousMissions and prerequisiteMissions)
     const prerequisiteMissions = requirements.prerequisiteMissions || requirements.previousMissions || [];
     if (prerequisiteMissions.length > 0) {
+      const completedIds = (missionHistory || []).map(m => m.missionId);
       for (const prevMissionId of prerequisiteMissions) {
-        const prevMission = missions[prevMissionId];
-        if (prevMission) {
-          const prevMissionStatus = getMissionStatus(prevMissionId);
-          if (prevMissionStatus !== 'completed') {
-            return false;
-          }
+        if (!completedIds.includes(prevMissionId)) {
+          return false;
         }
       }
     }

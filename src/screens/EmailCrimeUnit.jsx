@@ -107,8 +107,8 @@ const EmailCrimeUnit = () => {
         icon: getMissionIcon(missionId),
         difficulty: mission.difficulty,
         estimatedTime: mission.estimatedTime,
-        maxScore: mission.scoring.maxScore, 
-        XPReward: mission.scoring.xpReward,
+        maxScore: mission.scoring?.maxScore || 100,
+        XPReward: mission.scoring?.xpReward || 0,
         unlocked: isUnlocked,
         unlockRequirement: unlockRequirement
       };
@@ -120,7 +120,7 @@ const EmailCrimeUnit = () => {
     const mission = missions[missionId];
     if (!mission) return false;
 
-    const requirements = mission.unlockRequirements;
+    const requirements = mission.unlockRequirements || {};
     
     // Check level requirement
     if (detectiveData.level < (requirements.minimumLevel || 1)) {
@@ -129,21 +129,18 @@ const EmailCrimeUnit = () => {
     
     // Check previous missions requirement
     if (requirements.previousMissions && requirements.previousMissions.length > 0) {
+      const completedIds = (detectiveData.missionHistory || []).map(m => m.missionId);
       for (const prevMissionId of requirements.previousMissions) {
-        const prevMission = missions[prevMissionId];
-        if (prevMission) {
-          const prevMissionStatus = getMissionStatus(prevMissionId);
-          if (prevMissionStatus !== 'completed') {
-            return false;
-          }
+        if (!completedIds.includes(prevMissionId)) {
+          return false;
         }
       }
     }
     
     // Check minimum score requirement
-    if (requirements.minimumScore > 0) {
+    if ((requirements.minimumScore || 0) > 0) {
       const userScore = detectiveData.departmentProgress?.['email-crimes']?.score || 0;
-      if (userScore < requirements.minimumScore) {
+      if (userScore < (requirements.minimumScore || 0)) {
         return false;
       }
     }
@@ -175,24 +172,25 @@ const EmailCrimeUnit = () => {
 
   // Get unlock requirement text for locked missions
   const getUnlockRequirementText = (mission) => {
-    const requirements = [];
-    
-    if (detectiveData.level < (mission.unlockRequirements.minimumLevel || 1)) {
-      requirements.push(`Level ${mission.unlockRequirements.minimumLevel || 1}`);
+    const requirementsList = [];
+    const req = mission.unlockRequirements || {};
+
+    if (detectiveData.level < (req.minimumLevel || 1)) {
+      requirementsList.push(`Level ${req.minimumLevel || 1}`);
     }
-    
-    if (mission.unlockRequirements.previousMissions && mission.unlockRequirements.previousMissions.length > 0) {
-      const prevMissionNames = mission.unlockRequirements.previousMissions
+
+    if (req.previousMissions && req.previousMissions.length > 0) {
+      const prevMissionNames = req.previousMissions
         .map(id => missions[id]?.title || id)
         .join(', ');
-      requirements.push(`Complete: ${prevMissionNames}`);
+      requirementsList.push(`Complete: ${prevMissionNames}`);
     }
-    
-    if (mission.unlockRequirements.minimumScore > 0) {
-      requirements.push(`Score: ${mission.unlockRequirements.minimumScore}`);
+
+    if ((req.minimumScore || 0) > 0) {
+      requirementsList.push(`Score: ${req.minimumScore}`);
     }
-    
-    return requirements.join(' + ');
+
+    return requirementsList.join(' + ');
   };
 
   // Get mission icon based on mission ID
